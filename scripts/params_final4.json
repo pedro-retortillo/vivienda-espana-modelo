@@ -1,0 +1,23 @@
+{
+ "tau deterioro": 2400.0,
+ "tau demolicion": 1500.0,
+ "Exponente edad": 1.0,
+ "Sensibilidad margen": 2.8128737885500867,
+ "Fraccion suelo": 0.4847638193510666,
+ "tau obra": 8.878215155097523,
+ "Exponente inventario": 2.8586753353655343,
+ "Elasticidad credito obra": 0.06373098769851435,
+ "Velocidad precio": 0.01761409360357529,
+ "Elasticidad asequibilidad": 1.5279675890191768,
+ "Elasticidad hogares": 0.5074038072676446,
+ "Elasticidad credito": 0.7199560489235977,
+ "Elasticidad tipos": 1.620659182289549e-07,
+ "Sensibilidad inversora": 0.0003746194370206062,
+ "tau expectativa": 59.99962987349665,
+ "Techo desequilibrio": 0.3134999999999996,
+ "Elasticidad empleo": 2.29000217602391,
+ "Velocidad ancla": 0.04932497447515275,
+ "Exponente ancla": 2.252129086282855,
+ "Elasticidad expectativa hogares": 8.289054000302043,
+ "Interruptor precio forzado": 0.0
+}

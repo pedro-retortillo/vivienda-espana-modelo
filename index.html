@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Estudio abierto: un modelo de dinámica de sistemas de la vivienda en España, con datos oficiales, calibración 1981-2024, el subsistema de financiación y lo que se puede (y no se puede) concluir sobre los fondos.">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="¿Pueden crecer los fondos de inversión mientras se reduce la vivienda accesible?">
+<meta property="og:description" content="Estudio abierto: un modelo de dinámica de sistemas de la vivienda en España, con datos oficiales, calibración 1981-2024, el subsistema de financiación y lo que se puede (y no se puede) concluir sobre los fondos.">
+<meta name="twitter:card" content="summary">
+<meta property="og:url" content="https://pedro-retortillo.github.io/vivienda-espana-modelo/">
+<style>:root{color-scheme:light}body{margin:0}</style>
+</head>
+<body>
+<title>Estudio de vivienda</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Concepto: un estudio que se lee de arriba abajo y se puede comprobar. Texto claro, evidencia a la vista, limites en primer plano. */
+:root{
+  --bg:#F5F6F8; --surface:#FFFFFF; --ink:#14202B; --muted:#586573; --line:#D8DEE5; --accent:#0B5C8E; --accent-ink:#FFFFFF; --accent-soft:#E2EDF5;
+  --ref:#8895A2; --data:#14202B; --proj-bg:#EEF3F8; --warn:#8A5A00; --warn-bg:#FFF3D6; --ok:#0F6B4A; --ok-bg:#E3F4EC; --bad:#9B2C1F; --bad-bg:#FBE9E5;
+  --st:#E8F0F6; --ax:#F3F5F7; --pr-bg:#E3F4EC;
+  --f-display:"Space Grotesk","Segoe UI",system-ui,sans-serif; --f-body:"Inter","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1620; --surface:#16212D; --ink:#E6ECF2; --muted:#9BA8B5; --line:#2A3846; --accent:#6DB7E8; --accent-ink:#0E1620; --accent-soft:#1B2D3C;
+  --ref:#7B8895; --data:#E6ECF2; --proj-bg:#1A2836; --warn:#F3C76B; --warn-bg:#33291A; --ok:#5FD0A0; --ok-bg:#12302A; --bad:#F29B8E; --bad-bg:#3A1D19;
+  --st:#1D2E3D; --ax:#1B2733; --pr-bg:#12302A; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1620; --surface:#16212D; --ink:#E6ECF2; --muted:#9BA8B5; --line:#2A3846; --accent:#6DB7E8; --accent-ink:#0E1620; --accent-soft:#1B2D3C;
+  --ref:#7B8895; --data:#E6ECF2; --proj-bg:#1A2836; --warn:#F3C76B; --warn-bg:#33291A; --ok:#5FD0A0; --ok-bg:#12302A; --bad:#F29B8E; --bad-bg:#3A1D19;
+  --st:#1D2E3D; --ax:#1B2733; --pr-bg:#12302A; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 60px}
+.wrap{max-width:1080px;margin:0 auto}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;letter-spacing:-.01em;line-height:1.15}
+h1{font-size:clamp(30px,5vw,50px);font-weight:700}
+h2{font-size:clamp(23px,3.2vw,31px);font-weight:700;margin-top:0}
+h3{font-size:18px;font-weight:600;margin-top:26px}
+p{margin:12px 0;max-width:74ch}
+a{color:var(--accent)}
+.nav{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:4px}
+.nav .wrap{display:flex;gap:6px 18px;flex-wrap:wrap;font-size:13.5px}
+.nav a{text-decoration:none;color:var(--muted);font-weight:500}
+.nav a:hover{color:var(--accent)}
+.hero{padding:44px 0 26px}
+.kicker{font-size:12.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0 0 10px}
+.lede{font-size:19px;color:var(--muted);max-width:66ch;margin:16px 0 0}
+section{padding:46px 0 10px;border-top:1px solid var(--line)}
+section.first{border-top:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px;margin:20px 0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.card b{font-family:var(--f-display);font-size:26px;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.card span{color:var(--muted);font-size:14px;display:block;margin-top:4px}
+.callout{border-radius:10px;padding:14px 16px;margin:18px 0;border:1px solid var(--line);max-width:78ch}
+.callout.warn{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.callout.ok{background:var(--ok-bg);color:var(--ok);border-color:transparent}
+.callout.bad{background:var(--bad-bg);color:var(--bad);border-color:transparent}
+.callout p{margin:6px 0;color:inherit;max-width:none}
+.callout b{font-weight:600}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:16px;margin:16px 0}
+.two>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0}
+.two h4{margin:0 0 6px;font-family:var(--f-display);font-size:16px}
+ul.tight{margin:8px 0;padding-left:20px}
+ul.tight li{margin:4px 0;max-width:72ch}
+details{border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:14px 0;padding:0 16px}
+details[open]{padding-bottom:14px}
+summary{cursor:pointer;padding:13px 0;font-family:var(--f-display);font-weight:600;font-size:15.5px}
+summary:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tw{overflow-x:auto;margin:12px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-display);font-weight:600;background:var(--surface);position:sticky;top:0}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.lim{color:var(--warn);font-weight:600}
+.eq{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px;background:var(--ax);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0;overflow-x:auto;white-space:pre;max-width:100%}
+.dgwrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;margin:12px 0}
+svg.dg{width:100%;min-width:760px;height:auto;display:block}
+svg.dg .st{fill:var(--st);stroke:var(--ink);stroke-width:1.4}
+svg.dg .st2{stroke:var(--accent);stroke-width:2.2}
+svg.dg .ax{fill:var(--ax);stroke:var(--ref);stroke-width:1}
+svg.dg .ax2{fill:var(--accent-soft);stroke:var(--accent)}
+svg.dg .pr{fill:var(--pr-bg);stroke:var(--ok);stroke-width:2}
+svg.dg .fl{stroke:var(--ink);stroke-width:3;fill:none}
+svg.dg .fl.thin{stroke-width:2;stroke:var(--muted)}
+svg.dg .vl{fill:var(--surface);stroke:var(--ink);stroke-width:1.2}
+svg.dg .cl{fill:var(--surface);stroke:var(--ref);stroke-width:1.2}
+svg.dg .lk{stroke:var(--muted);stroke-width:1.3;fill:none;stroke-dasharray:4 3}
+svg.dg .ahp{fill:var(--ink)}
+svg.dg .ah2p{fill:var(--muted)}
+svg.dg .tx{fill:var(--ink);font:12.5px var(--f-body)}
+svg.dg .tx.b{font-weight:600;font-size:13.5px}
+svg.dg .tx.s{fill:var(--muted);font-size:11.5px}
+svg.dg .tx.sg{fill:var(--accent);font-weight:700;font-size:14px}
+svg.dg .tx.lp{fill:var(--ok);font-weight:700;font-size:13px}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,430px),1fr));gap:14px;margin:16px 0}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 12px 6px;min-width:0;position:relative}
+.chart h3{font-size:15px;margin:0}
+.chart .u{font-size:12.5px;color:var(--muted);margin:0 0 2px}
+.chart svg{width:100%;height:auto;display:block;touch-action:pan-y}
+.chart text{fill:var(--muted);font-family:var(--f-body);font-size:11px;font-variant-numeric:tabular-nums}
+.chart text.ph{font-size:11px;font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:6px 8px;border-radius:6px;white-space:nowrap;font-variant-numeric:tabular-nums;z-index:3}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:10px 0 2px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:20px;height:0;border-top:3px solid var(--accent)}
+.legend i.dot{width:8px;height:8px;border:0;border-radius:50%;background:var(--data)}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:12px 22px;margin:14px 0}
+.sl{display:grid;grid-template-columns:1fr auto;gap:2px 8px;align-items:baseline}
+.sl .lab{font-size:13.5px}
+.sl output{font-variant-numeric:tabular-nums;font-weight:600;font-size:13.5px}
+.sl input[type=range]{grid-column:1/-1;width:100%;accent-color:var(--accent)}
+select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 9px;max-width:100%}
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.presets label{display:flex;gap:8px;align-items:center;cursor:pointer;padding:7px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:14px}
+.presets input{accent-color:var(--accent)}
+.presets label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(176px,1fr));gap:12px;margin:12px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:0}
+.kpi .k{font-size:12.5px;color:var(--muted);margin:0}
+.kpi .v{font-family:var(--f-display);font-size:24px;font-weight:700;margin:2px 0 0;font-variant-numeric:tabular-nums;line-height:1.15}
+.kpi .d{font-size:12.5px;color:var(--muted);margin:2px 0 0}
+.heat td,.heat th{text-align:center;font-variant-numeric:tabular-nums;padding:9px 8px}
+.heat td.up{background:var(--bad-bg);color:var(--bad)}
+.heat td.dn{background:var(--ok-bg);color:var(--ok)}
+.heat td.z{color:var(--muted)}
+.heat th.rowh{text-align:left;position:static}
+.small{font-size:13.5px;color:var(--muted)}
+button{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer}
+footer{margin-top:50px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+</style>
+
+<nav class="nav"><div class="wrap">
+  <a href="#resumen">Resumen</a><a href="#pregunta">La pregunta</a><a href="#modelo">El modelo</a><a href="#datos">Los datos</a>
+  <a href="#financiacion">Financiación</a><a href="#calibracion">Calibración</a><a href="#limites">Lo que no sabemos</a><a href="#tesis">La tesis</a><a href="#simulador">Simulador</a><a href="#fuentes">Fuentes</a>
+</div></nav>
+
+<div class="wrap">
+<header class="hero" id="resumen">
+  <p class="kicker">Dinámica de sistemas · Estudio abierto · España 1981-2050</p>
+  <h1>¿Pueden crecer los fondos de inversión mientras se reduce la vivienda accesible?</h1>
+  <p class="lede">Un modelo de la vivienda en España, construido desde el censo de 1981 y contrastado con datos oficiales, para entender qué mueve el precio, quién puede comprar y qué se puede (y qué no se puede) concluir sobre el papel de los fondos.</p>
+
+  <div class="cards">
+    <div class="card"><b id="c-prec">—</b><span>error medio del precio frente al dato (1981-2024)</span></div>
+    <div class="card"><b id="c-parq">—</b><span>error medio del parque de viviendas</span></div>
+    <div class="card"><b id="c-deu">—</b><span>error medio de la deuda hipotecaria de los hogares frente al BIS</span></div>
+    <div class="card"><b>16-18 %</b><span>error al predecir el precio de la crisis, ajustando solo hasta 2007</span></div>
+  </div>
+
+  <div class="two">
+    <div><h4>Lo que el estudio muestra</h4>
+      <ul class="tight">
+        <li>Un modelo con siete subsistemas que reproduce el parque, el precio, las viviendas terminadas y la deuda hipotecaria de 1981 a 2024.</li>
+        <li>Lo que un hogar puede pagar depende de la renta, del tipo, del plazo, del préstamo sobre valor y del ahorro para la entrada. Desde mediados de los años 90, el límite que manda es la entrada, no la cuota.</li>
+        <li>Una dinámica de expectativas que se retroalimenta con el precio es necesaria para explicar su historia.</li>
+      </ul></div>
+    <div><h4>Lo que el estudio no puede decir</h4>
+      <ul class="tight">
+        <li>Si esa dinámica la protagonizan los fondos o los hogares: los datos agregados no lo distinguen.</li>
+        <li>Cuál será el precio o el parque en 2050: depende de supuestos y no es una predicción.</li>
+        <li>Qué ocurría antes de 2004 en financiación: hay supuestos, y están marcados.</li>
+      </ul></div>
+  </div>
+  <div class="callout warn"><p><b>Cómo leer esta página.</b> Cada resultado va acompañado de su error y de su fuente. Lo que son supuestos se llama supuesto. Los detalles técnicos están en bloques desplegables.</p></div>
+</header>
+
+<section id="pregunta" class="first">
+  <h2>La pregunta</h2>
+  <p>Si la oferta de vivienda tiene que cubrir las necesidades de los hogares y, además, las apetencias de negocio de fondos que buscan rendimientos altos, <b>el precio sube y la oferta asequible para los hogares disminuye</b>. Es la tesis que motiva el estudio.</p>
+  <p>Para que sea cierta tienen que cumplirse cuatro cosas a la vez:</p>
+  <ul class="tight">
+    <li><b>Competencia:</b> hogares y fondos compran del mismo stock de viviendas.</li>
+    <li><b>Oferta limitada:</b> la obra nueva y la rehabilitación responden con retraso y no cubren la demanda.</li>
+    <li><b>El precio responde a la presión</b> de la demanda.</li>
+    <li><b>Peso suficiente de los fondos</b> en las compras.</li>
+  </ul>
+  <p>Un modelo no demuestra una tesis. Puede mostrar <b>bajo qué condiciones se cumple</b>, y qué datos harían falta para saber en cuál estamos. Eso es lo que hace este estudio.</p>
+</section>
+
+<section id="modelo">
+  <h2>El modelo</h2>
+  <p>Es un modelo de <b>stocks y flujos</b> (diagramas de Forrester): los rectángulos son existencias (viviendas, hogares, euros de deuda) y las flechas gruesas, lo que entra o sale cada mes. Las variables que influyen en los flujos se dibujan con flechas finas. Está hecho con Vensim y se simula en esta misma página.</p>
+  <h3>Siete subsistemas</h3>
+  <div class="two">
+    <div><h4>1. Parque de viviendas</h4><p class="small">Estados de cada vivienda: en obra, a la venta, de uso propio, alquilada, retenida vacía, segunda residencia, deteriorada. El balance de viviendas cierra siempre.</p></div>
+    <div><h4>2. Hogares</h4><p class="small">Número de hogares, que sigue a los datos de la EPA y a la proyección del INE.</p></div>
+    <div><h4>3. Demanda de los hogares</h4><p class="small">Cuántas viviendas quieren comprar según su capacidad de compra y sus expectativas.</p></div>
+    <div><h4>4. Demanda inversora</h4><p class="small">Compras para obtener rentabilidad: alquiler observado, expectativa de revalorización y coste del dinero.</p></div>
+    <div><h4>5. Precio y alquiler</h4><p class="small">El precio sube si la demanda supera lo que sale a la venta y tiende a lo que el sistema financia.</p></div>
+    <div><h4>6. Oferta: obra y rehabilitación</h4><p class="small">Los inicios de obra responden al margen, con retraso, y se frenan si hay mucha vivienda sin vender.</p></div>
+    <div><h4>7. Financiación, políticas y límites</h4><p class="small">Capacidad de compra hipotecaria, deuda de los hogares y palancas de política. Es el último subsistema, y se explica en detalle más abajo.</p></div>
+  </div>
+  <details open><summary>Diagrama 1: el parque de viviendas</summary><div class="dgwrap"><svg viewBox="0 0 980 470" role="img" aria-label="Diagrama de Forrester del parque de viviendas" class="dg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahp"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah2p"/></marker></defs><rect x="40" y="200" width="110" height="50" rx="3" class="st"/><text x="95.0" y="222.0" text-anchor="middle" class="tx b">En</text><text x="95.0" y="236.0" text-anchor="middle" class="tx b">construcción</text><rect x="330" y="200" width="120" height="50" rx="3" class="st"/><text x="390.0" y="229.0" text-anchor="middle" class="tx b">A la venta</text><rect x="330" y="40" width="120" height="50" rx="3" class="st"/><text x="390.0" y="69.0" text-anchor="middle" class="tx b">Uso propio</text><rect x="640" y="200" width="130" height="50" rx="3" class="st"/><text x="705.0" y="222.0" text-anchor="middle" class="tx b">Vacías</text><text x="705.0" y="236.0" text-anchor="middle" class="tx b">retenidas</text><rect x="640" y="40" width="130" height="50" rx="3" class="st"/><text x="705.0" y="69.0" text-anchor="middle" class="tx b">Alquiladas</text><rect x="330" y="360" width="120" height="50" rx="3" class="st"/><text x="390.0" y="382.0" text-anchor="middle" class="tx b">Segundas</text><text x="390.0" y="396.0" text-anchor="middle" class="tx b">residencias</text><rect x="780" y="360" width="130" height="50" rx="3" class="st st2"/><text x="845.0" y="389.0" text-anchor="middle" class="tx b">Deterioradas</text><path d="M-4 231a8 8 0 0 1 2-14a10 10 0 0 1 19-3a9 9 0 0 1 14 8a7 7 0 0 1-3 9z" class="cl"/><line x1="18" y1="225" x2="40" y2="225" class="fl" marker-end="url(#ah)"/><path d="M23.0 219.0L35.0 231.0L35.0 219.0L23.0 231.0z" class="vl"/><line x1="150" y1="225" x2="330" y2="225" class="fl" marker-end="url(#ah)"/><path d="M234.0 219.0L246.0 231.0L246.0 219.0L234.0 231.0z" class="vl"/><text x="240.0" y="213.0" text-anchor="middle" class="tx s">Obra a venta</text><line x1="95" y1="250" x2="330" y2="385" class="fl" marker-end="url(#ah)"/><path d="M206.5 311.5L218.5 323.5L218.5 311.5L206.5 323.5z" class="vl"/><text x="242.5" y="339.5" text-anchor="middle" class="tx s">Obra a segundas residencias</text><line x1="375" y1="200" x2="375" y2="90" class="fl" marker-end="url(#ah)"/><path d="M369.0 139.0L381.0 151.0L381.0 139.0L369.0 151.0z" class="vl"/><text x="327.0" y="145.0" text-anchor="middle" class="tx s">Compra de hogares</text><line x1="405" y1="90" x2="405" y2="200" class="fl" marker-end="url(#ah)"/><path d="M399.0 139.0L411.0 151.0L411.0 139.0L399.0 151.0z" class="vl"/><text x="441.0" y="145.0" text-anchor="middle" class="tx s">Reventa</text><line x1="450" y1="212" x2="640" y2="212" class="fl" marker-end="url(#ah)"/><path d="M539.0 206.0L551.0 218.0L551.0 206.0L539.0 218.0z" class="vl"/><text x="545.0" y="202.0" text-anchor="middle" class="tx s">Compra inversora</text><line x1="640" y1="238" x2="450" y2="238" class="fl" marker-end="url(#ah)"/><path d="M539.0 232.0L551.0 244.0L551.0 232.0L539.0 244.0z" class="vl"/><text x="545.0" y="258.0" text-anchor="middle" class="tx s">Venta del inversor</text><line x1="700" y1="200" x2="700" y2="90" class="fl" marker-end="url(#ah)"/><path d="M694.0 139.0L706.0 151.0L706.0 139.0L694.0 151.0z" class="vl"/><text x="644.0" y="145.0" text-anchor="middle" class="tx s">Puesta en alquiler</text><line x1="730" y1="90" x2="730" y2="200" class="fl" marker-end="url(#ah)"/><path d="M724.0 139.0L736.0 151.0L736.0 139.0L724.0 151.0z" class="vl"/><text x="782.0" y="145.0" text-anchor="middle" class="tx s">Fin de contrato</text><line x1="390" y1="360" x2="390" y2="250" class="fl" marker-end="url(#ah)"/><path d="M384.0 299.0L396.0 311.0L396.0 299.0L384.0 311.0z" class="vl"/><text x="330.0" y="305.0" text-anchor="middle" class="tx s">Segundas a la venta</text><line x1="770" y1="245" x2="800" y2="360" class="fl thin" marker-end="url(#ah)"/><path d="M779.0 296.5L791.0 308.5L791.0 296.5L779.0 308.5z" class="vl"/><text x="855.0" y="300.5" text-anchor="middle" class="tx s">Deterioro (de todos los stocks)</text><line x1="780" y1="385" x2="450" y2="240" class="fl thin" marker-end="url(#ah)"/><path d="M609.0 306.5L621.0 318.5L621.0 306.5L609.0 318.5z" class="vl"/><text x="625.0" y="350.5" text-anchor="middle" class="tx s">Rehabilitación</text><rect x="520" y="400" width="160" height="44" rx="3" class="st"/><text x="600.0" y="426.0" text-anchor="middle" class="tx b">Parque retirado</text><line x1="845" y1="410" x2="680" y2="422" class="fl thin" marker-end="url(#ah)"/><path d="M756.5 410.0L768.5 422.0L768.5 410.0L756.5 422.0z" class="vl"/><text x="762.5" y="438.0" text-anchor="middle" class="tx s">Demolición</text><text x="490" y="18" text-anchor="middle" class="tx s">Cada rectángulo es un nivel (viviendas); cada flecha gruesa, un flujo (viviendas al mes)</text></svg></div></details>
+  <details><summary>Diagrama 2: demandas y precio (lazos de refuerzo y de equilibrio)</summary><div class="dgwrap"><svg viewBox="0 0 980 560" role="img" aria-label="Diagrama causal de las demandas y el precio" class="dg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahp"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah2p"/></marker></defs><rect x="35.0" y="48" width="110.0" height="24" rx="12" class="ax"/><text x="90" y="64" text-anchor="middle" class="tx">Renta del hogar</text><rect x="44.599999999999994" y="98" width="90.80000000000001" height="24" rx="12" class="ax"/><text x="90" y="114" text-anchor="middle" class="tx">Tipo y plazo</text><rect x="31.799999999999997" y="148" width="116.4" height="24" rx="12" class="ax"/><text x="90" y="164" text-anchor="middle" class="tx">Préstamo / valor</text><rect x="12.599999999999994" y="198" width="154.8" height="24" rx="12" class="ax"/><text x="90" y="214" text-anchor="middle" class="tx">Ahorro para la entrada</text><rect x="181.0" y="123" width="238.0" height="24" rx="12" class="ax"/><text x="300" y="139" text-anchor="middle" class="tx">Capacidad de compra (años de renta)</text><path d="M155 62Q185.0 97.0 215 132" class="lk" marker-end="url(#ah2)"/><text x="185.0" y="97.0" text-anchor="middle" class="tx sg">+</text><path d="M155 112Q185.0 122.0 215 132" class="lk" marker-end="url(#ah2)"/><text x="185.0" y="122.0" text-anchor="middle" class="tx sg">−</text><path d="M155 162Q185.0 147.0 215 132" class="lk" marker-end="url(#ah2)"/><text x="185.0" y="147.0" text-anchor="middle" class="tx sg">±</text><path d="M155 212Q185.0 172.0 215 132" class="lk" marker-end="url(#ah2)"/><text x="185.0" y="172.0" text-anchor="middle" class="tx sg">+</text><rect x="503.0" y="123" width="54" height="24" rx="12" class="ax ax2"/><text x="530" y="139" text-anchor="middle" class="tx">Acceso</text><path d="M380 135Q437.5 135.0 495 135" class="lk" marker-end="url(#ah2)"/><text x="437.5" y="135.0" text-anchor="middle" class="tx sg">+</text><rect x="465.4" y="233" width="129.2" height="24" rx="12" class="ax ax2"/><text x="530" y="249" text-anchor="middle" class="tx">Demanda de hogares</text><path d="M530 148Q530.0 190.0 530 232" class="lk" marker-end="url(#ah2)"/><text x="530.0" y="190.0" text-anchor="middle" class="tx sg">+</text><rect x="213.0" y="318" width="174.0" height="24" rx="12" class="ax"/><text x="300" y="334" text-anchor="middle" class="tx">Rentabilidad del alquiler</text><rect x="200.2" y="368" width="199.60000000000002" height="24" rx="12" class="ax"/><text x="300" y="384" text-anchor="middle" class="tx">Expectativa de revalorización</text><rect x="213.0" y="418" width="174.0" height="24" rx="12" class="ax"/><text x="300" y="434" text-anchor="middle" class="tx">Coste del dinero y riesgo</text><rect x="468.6" y="368" width="122.80000000000001" height="24" rx="12" class="ax ax2"/><text x="530" y="384" text-anchor="middle" class="tx">Demanda inversora</text><path d="M380 330Q430.0 349.0 480 368" class="lk" marker-end="url(#ah2)"/><text x="430.0" y="349.0" text-anchor="middle" class="tx sg">+</text><path d="M420 380Q442.5 380.0 465 380" class="lk" marker-end="url(#ah2)"/><text x="442.5" y="380.0" text-anchor="middle" class="tx sg">+</text><path d="M380 430Q430.0 411.0 480 392" class="lk" marker-end="url(#ah2)"/><text x="430.0" y="411.0" text-anchor="middle" class="tx sg">−</text><rect x="685.8" y="298" width="148.4" height="24" rx="12" class="ax ax2"/><text x="760" y="314" text-anchor="middle" class="tx">Presión de la demanda</text><path d="M595 250Q647.5 275.0 700 300" class="lk" marker-end="url(#ah2)"/><text x="647.5" y="275.0" text-anchor="middle" class="tx sg">+</text><path d="M600 372Q650.0 347.0 700 322" class="lk" marker-end="url(#ah2)"/><text x="650.0" y="347.0" text-anchor="middle" class="tx sg">+</text><rect x="705.0" y="178" width="110.0" height="24" rx="12" class="ax ax2"/><text x="760" y="194" text-anchor="middle" class="tx">Oferta en venta</text><path d="M760 202Q760.0 250.0 760 298" class="lk" marker-end="url(#ah2)"/><text x="760.0" y="250.0" text-anchor="middle" class="tx sg">−</text><rect x="833.0" y="448" width="54" height="24" rx="12" class="ax pr"/><text x="860" y="464" text-anchor="middle" class="tx">PRECIO</text><path d="M780 322Q810.0 385.0 840 448" class="lk" marker-end="url(#ah2)"/><text x="810.0" y="385.0" text-anchor="middle" class="tx sg">+</text><path d="M830 448Q783.9277140537154 218.42791008555986 560 150" class="lk" marker-end="url(#ah2)"/><text x="733.4638570268577" y="250.71395504277996" text-anchor="middle" class="tx sg">−</text><path d="M840 470Q603.5820768358714 549.0731661612217 410 392" class="lk" marker-end="url(#ah2)"/><text x="594.2910384179356" y="510.03658308061085" text-anchor="middle" class="tx sg">+</text><rect x="588.2" y="518" width="103.60000000000001" height="24" rx="12" class="ax"/><text x="640" y="534" text-anchor="middle" class="tx">Margen de obra</text><rect x="375.0" y="518" width="110.0" height="24" rx="12" class="ax"/><text x="430" y="534" text-anchor="middle" class="tx">Inicios de obra</text><rect x="129.0" y="518" width="142.0" height="24" rx="12" class="ax"/><text x="200" y="534" text-anchor="middle" class="tx">Viviendas terminadas</text><path d="M850 472Q775.0 496.0 700 520" class="lk" marker-end="url(#ah2)"/><text x="775.0" y="496.0" text-anchor="middle" class="tx sg">+</text><path d="M575 530Q532.5 530.0 490 530" class="lk" marker-end="url(#ah2)"/><text x="532.5" y="530.0" text-anchor="middle" class="tx sg">+</text><path d="M370 530Q322.5 530.0 275 530" class="lk" marker-end="url(#ah2)"/><text x="322.5" y="530.0" text-anchor="middle" class="tx sg">+</text><path d="M150 520Q345.4818794523791 223.65883713907454 700 205" class="lk" marker-end="url(#ah2)"/><text x="405.24093972618954" y="293.07941856953727" text-anchor="middle" class="tx sg">+</text><text x="700" y="430" text-anchor="middle" class="tx lp">R: expectativas</text><text x="560" y="70" text-anchor="middle" class="tx lp">B: acceso</text><text x="130" y="505" text-anchor="middle" class="tx lp">B: obra nueva</text><text x="490" y="18" text-anchor="middle" class="tx s">Verde: el precio y lo que lo mueve. Los signos indican si el efecto va en el mismo sentido (+) o contrario (−)</text></svg></div>
+    <p class="small">R: lazo de refuerzo, el precio sube y alimenta expectativas que suben el precio. B: lazo de equilibrio, un precio alto reduce el acceso o anima la obra nueva, que llega con retraso.</p></details>
+  <details><summary>Diagrama 3: hogares</summary><div class="dgwrap"><svg viewBox="0 0 980 260" role="img" aria-label="Diagrama del subsistema de hogares" class="dg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahp"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah2p"/></marker></defs><rect x="46.19999999999999" y="38" width="167.60000000000002" height="24" rx="12" class="ax"/><text x="130" y="54" text-anchor="middle" class="tx">Hogares de la EPA (dato)</text><rect x="7.799999999999997" y="98" width="244.4" height="24" rx="12" class="ax"/><text x="130" y="114" text-anchor="middle" class="tx">Proyección del INE (después de 2024)</text><rect x="271.8" y="68" width="116.4" height="24" rx="12" class="ax ax2"/><text x="330" y="84" text-anchor="middle" class="tx">Hogares objetivo</text><path d="M200 55Q242.5 64.5 285 74" class="lk" marker-end="url(#ah2)"/><text x="242.5" y="64.5" text-anchor="middle" class="tx sg">+</text><path d="M230 108Q260.0 98.0 290 88" class="lk" marker-end="url(#ah2)"/><text x="260.0" y="98.0" text-anchor="middle" class="tx sg">+</text><rect x="520" y="130" width="130" height="56" rx="3" class="st"/><text x="585.0" y="162.0" text-anchor="middle" class="tx b">Hogares</text><path d="M316 164a8 8 0 0 1 2-14a10 10 0 0 1 19-3a9 9 0 0 1 14 8a7 7 0 0 1-3 9z" class="cl"/><line x1="340" y1="158" x2="520" y2="158" class="fl" marker-end="url(#ah)"/><path d="M424.0 152.0L436.0 164.0L436.0 152.0L424.0 164.0z" class="vl"/><text x="430.0" y="146.0" text-anchor="middle" class="tx s">Formación</text><line x1="650" y1="158" x2="840" y2="158" class="fl" marker-end="url(#ah)"/><path d="M739.0 152.0L751.0 164.0L751.0 152.0L739.0 164.0z" class="vl"/><text x="745.0" y="146.0" text-anchor="middle" class="tx s">Disolución</text><path d="M846 166a8 8 0 0 1 2-14a10 10 0 0 1 19-3a9 9 0 0 1 14 8a7 7 0 0 1-3 9z" class="cl"/><path d="M360 92Q460.0 112.0 560 132" class="lk" marker-end="url(#ah2)"/><text x="460.0" y="112.0" text-anchor="middle" class="tx sg">+</text><text x="490" y="232" text-anchor="middle" class="tx s">Los hogares siguen a los datos con un retraso de dos años; en la demanda actúan como escala (más hogares, más compras deseadas)</text></svg></div></details>
+  <details><summary>Ecuaciones clave</summary>
+    <p class="small">Tiempo en meses desde enero de 1981; precios en euros constantes de 2010.</p>
+    <div class="eq">Balance del parque:      dN/dt = obra terminada − demolición
+Reparto de la oferta:    λ = mín(1, oferta en venta / (demanda hogares + demanda inversora))
+                         compras de hogares = λ · demanda hogares ; compras inversoras = λ · demanda inversora
+Precio:                  dP/dt = k_P · P · mín(presión − 1, c) − k_F · P · (P / (ρ · P_fundamental) − 1)
+Rentabilidad inversora:  r = 12 · alquiler / P + expectativa − coste del dinero − riesgo
+Demanda inversora:       D_i = m · D_i0 · máx(0, 1 + β · (r − r_ref))
+Obra:                    inicios = I0 · máx(0, 1 + β_C · margen / C_ref) · factor de inventario</div>
+  </details>
+</section>
+
+<section id="datos">
+  <h2>Los datos</h2>
+  <p>Todo parte de series oficiales y públicas. El estado inicial, en 1981, sale del censo: 14,86 millones de viviendas, 10,15 millones de hogares, un 73,1 % + 6,1 % en propiedad o cesión y un 20,8 % en alquiler, y 1,90 millones de segundas residencias.</p>
+  <div class="charts" id="datacharts"></div>
+  <div class="tw"><table>
+    <thead><tr><th>Serie</th><th>Periodo</th><th>Fuente</th></tr></thead><tbody>
+    <tr><td>Parque de viviendas y hogares</td><td>1981-2024</td><td>Observatorio de Vivienda y Suelo (MIVAU), Banco de España, INE (censos, EPA)</td></tr>
+    <tr><td>Precio de la vivienda (real)</td><td>1981-2024</td><td>BIS (series del Banco de España), anclado al valor tasado del MIVAU</td></tr>
+    <tr><td>Viviendas terminadas</td><td>2003-2024</td><td>MIVAU, visados y calificaciones</td></tr>
+    <tr><td>Préstamo sobre valor, plazo y tipo de las hipotecas nuevas</td><td>2004-2024</td><td>Estadística Registral Inmobiliaria, Banco de España</td></tr>
+    <tr><td>Precio sobre renta y esfuerzo teórico</td><td>2003-2024</td><td>Banco de España</td></tr>
+    <tr><td>Deuda de los hogares (crédito sobre PIB)</td><td>1980-2024</td><td>BIS; Banco de España</td></tr>
+    <tr><td>Rentabilidad por alquiler y de alternativas</td><td>1996-2024</td><td>Banco de España</td></tr>
+    <tr><td>Tipo oficial, inflación, PIB per cápita, paro, población</td><td>1975-2025</td><td>BIS, Banco Mundial</td></tr>
+  </tbody></table></div>
+  <div class="callout warn"><p><b>Supuestos en lo que no hay dato.</b> Antes de 2004 no hay préstamo sobre valor ni plazo: se mantiene el de 2004. Antes de 1996 se mantiene la rentabilidad por alquiler de 1996. El tipo anterior a 2004 es el oficial más 1,5 puntos. El precio de 1980 a 1995 es una reconstrucción, no una serie oficial en euros por metro cuadrado.</p></div>
+</section>
+
+<section id="financiacion">
+  <h2>El último subsistema: la financiación</h2>
+  <p>El modelo ya sabía cuántas viviendas hay y cuántos hogares las necesitan. Faltaba lo que decide <b>quién puede comprar</b>. Los hogares compran con hipoteca, y lo que pueden pagar depende de su renta, de la cuota por euro prestado (tipo y plazo), de cuánto presta el banco sobre el valor y del ahorro que tienen para la entrada.</p>
+  <h3>Tres piezas</h3>
+  <ul class="tight">
+    <li><b>Capacidad de compra hipotecaria,</b> en años de renta: el menor de dos límites. Por cuota: el esfuerzo máximo dividido entre la cuota anual por euro y el préstamo sobre valor. Por entrada: el ahorro dividido entre la parte no financiada.</li>
+    <li><b>Deuda hipotecaria</b> como existencia: sube con los préstamos nuevos y baja con las amortizaciones. Se compara con el crédito de los hogares sobre PIB del BIS.</li>
+    <li><b>Rentabilidad real del alquiler</b> del inversor, observada desde 1996, en lugar de una renta constante.</li>
+  </ul>
+  <div class="dgwrap"><svg viewBox="0 0 980 500" role="img" aria-label="Diagrama del subsistema de financiación" class="dg"><defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ahp"/></marker><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="ah2p"/></marker></defs><rect x="430" y="150" width="150" height="60" rx="3" class="st st2"/><text x="505.0" y="177.0" text-anchor="middle" class="tx b">Deuda</text><text x="505.0" y="191.0" text-anchor="middle" class="tx b">hipotecaria</text><path d="M116 186a8 8 0 0 1 2-14a10 10 0 0 1 19-3a9 9 0 0 1 14 8a7 7 0 0 1-3 9z" class="cl"/><line x1="140" y1="180" x2="430" y2="180" class="fl" marker-end="url(#ah)"/><path d="M279.0 174.0L291.0 186.0L291.0 174.0L279.0 186.0z" class="vl"/><text x="285.0" y="168.0" text-anchor="middle" class="tx s">Préstamos nuevos</text><line x1="580" y1="180" x2="850" y2="180" class="fl" marker-end="url(#ah)"/><path d="M709.0 174.0L721.0 186.0L721.0 174.0L709.0 186.0z" class="vl"/><text x="715.0" y="168.0" text-anchor="middle" class="tx s">Amortización</text><path d="M856 188a8 8 0 0 1 2-14a10 10 0 0 1 19-3a9 9 0 0 1 14 8a7 7 0 0 1-3 9z" class="cl"/><rect x="108.8" y="58" width="212.4" height="24" rx="12" class="ax"/><text x="215" y="74" text-anchor="middle" class="tx">Compras de hogares e inversores</text><rect x="147.2" y="98" width="135.60000000000002" height="24" rx="12" class="ax"/><text x="215" y="114" text-anchor="middle" class="tx">Precio × superficie</text><rect x="266.8" y="238" width="116.4" height="24" rx="12" class="ax"/><text x="325" y="254" text-anchor="middle" class="tx">Préstamo / valor</text><rect x="67.19999999999999" y="238" width="135.60000000000002" height="24" rx="12" class="ax"/><text x="135" y="254" text-anchor="middle" class="tx">Fracción hipotecada</text><path d="M215 82Q247.5 125.0 280 168" class="lk" marker-end="url(#ah2)"/><text x="247.5" y="125.0" text-anchor="middle" class="tx sg">+</text><path d="M215 122Q257.5 146.0 300 170" class="lk" marker-end="url(#ah2)"/><text x="257.5" y="146.0" text-anchor="middle" class="tx sg">+</text><path d="M325 238Q327.5 214.0 330 190" class="lk" marker-end="url(#ah2)"/><text x="327.5" y="214.0" text-anchor="middle" class="tx sg">+</text><path d="M160 238Q205.0 214.0 250 190" class="lk" marker-end="url(#ah2)"/><text x="205.0" y="214.0" text-anchor="middle" class="tx sg">+</text><rect x="637.6" y="238" width="154.8" height="24" rx="12" class="ax"/><text x="715" y="254" text-anchor="middle" class="tx">Plazo de las hipotecas</text><path d="M715 238Q715.0 215.0 715 192" class="lk" marker-end="url(#ah2)"/><text x="715.0" y="215.0" text-anchor="middle" class="tx sg">−</text><text x="490" y="290" text-anchor="middle" class="tx s">La deuda se compara con el crédito a hogares sobre PIB (BIS): es una comprobación, no un ajuste a mano</text><rect x="123.0" y="348" width="54" height="24" rx="12" class="ax"/><text x="150" y="364" text-anchor="middle" class="tx">Renta</text><rect x="95.0" y="398" width="110.0" height="24" rx="12" class="ax"/><text x="150" y="414" text-anchor="middle" class="tx">Esfuerzo máximo</text><rect x="275.0" y="348" width="110.0" height="24" rx="12" class="ax"/><text x="330" y="364" text-anchor="middle" class="tx">Tipo de interés</text><rect x="303.0" y="398" width="54" height="24" rx="12" class="ax"/><text x="330" y="414" text-anchor="middle" class="tx">Plazo</text><rect x="439.4" y="373" width="161.20000000000002" height="24" rx="12" class="ax"/><text x="520" y="389" text-anchor="middle" class="tx">Cuota por euro prestado</text><path d="M380 362Q415.0 371.0 450 380" class="lk" marker-end="url(#ah2)"/><text x="415.0" y="371.0" text-anchor="middle" class="tx sg">+</text><path d="M380 410Q415.0 401.0 450 392" class="lk" marker-end="url(#ah2)"/><text x="415.0" y="401.0" text-anchor="middle" class="tx sg">−</text><rect x="462.2" y="438" width="135.60000000000002" height="24" rx="12" class="ax ax2"/><text x="530" y="454" text-anchor="middle" class="tx">Capacidad por cuota</text><path d="M520 398Q522.5 418.0 525 438" class="lk" marker-end="url(#ah2)"/><text x="522.5" y="418.0" text-anchor="middle" class="tx sg">−</text><path d="M210 412Q325.0 431.0 440 450" class="lk" marker-end="url(#ah2)"/><text x="325.0" y="431.0" text-anchor="middle" class="tx sg">+</text><rect x="682.6" y="348" width="154.8" height="24" rx="12" class="ax"/><text x="760" y="364" text-anchor="middle" class="tx">Ahorro (años de renta)</text><rect x="715.8" y="438" width="148.4" height="24" rx="12" class="ax ax2"/><text x="790" y="454" text-anchor="middle" class="tx">Capacidad por entrada</text><path d="M765 372Q772.5 405.0 780 438" class="lk" marker-end="url(#ah2)"/><text x="772.5" y="405.0" text-anchor="middle" class="tx sg">+</text><rect x="888.2" y="393" width="103.60000000000001" height="24" rx="12" class="ax"/><text x="940" y="409" text-anchor="middle" class="tx">Préstamo/valor</text><path d="M930 392Q882.5 416.0 835 440" class="lk" marker-end="url(#ah2)"/><text x="882.5" y="416.0" text-anchor="middle" class="tx sg">−</text><rect x="531.4" y="468" width="257.20000000000005" height="24" rx="12" class="ax pr"/><text x="660" y="484" text-anchor="middle" class="tx">MÍNIMO de las dos: capacidad de compra</text><path d="M580 452Q600.0 461.0 620 470" class="lk" marker-end="url(#ah2)"/><path d="M770 462Q745.0 467.0 720 472" class="lk" marker-end="url(#ah2)"/></svg></div>
+  <div class="eq">cuota anual por euro = i / (1 − (1 + i)^(−n/12))        (i: tipo, n: plazo en meses)
+capacidad por cuota    = esfuerzo máximo / (cuota por euro · préstamo/valor)
+capacidad por entrada  = ahorro / (1 − préstamo/valor)
+capacidad de compra    = mín(capacidad por cuota, capacidad por entrada)
+acceso                 = capacidad de compra / (precio sobre renta)</div>
+  <div class="callout ok"><p><b>Comprobaciones.</b> La capacidad de compra que da el modelo es de 8 a 10 años de renta; el precio sobre renta observado va de 7 a 9. Desde mediados de los años 90 manda la entrada, no la cuota: con tipos de dos dígitos mandaba la cuota. Esta pieza sustituye a un ancla puramente estadística que usaba la versión anterior y que ajustaba bien sin explicar por qué.</p></div>
+  <details><summary>Fuentes de cada variable del subsistema</summary>
+    <ul class="tight">
+      <li>Préstamo sobre valor: tabla 6.10 del Boletín Anual 2024 del Observatorio de Vivienda y Suelo (Estadística Registral Inmobiliaria), 2004-2024.</li>
+      <li>Plazo y tipo de las hipotecas nuevas: tabla 6.11 (Banco de España y Registradores), 2004-2024.</li>
+      <li>Precio sobre renta bruta del hogar y esfuerzo teórico: tabla 6.14 (Banco de España), 2003-2024.</li>
+      <li>Deuda de los hogares sobre PIB: tabla 6.12 (Banco de España) y BIS, series de crédito, 1980-2024.</li>
+      <li>Hipotecas de vivienda constituidas: tabla 6.1 (Registradores), 2004-2024.</li>
+      <li>Rentabilidad bruta por alquiler y de las alternativas: tabla 7.6 (Banco de España), 1996-2024.</li>
+    </ul></details>
+</section>
+
+<section id="calibracion">
+  <h2>La calibración: qué tal reproduce la historia</h2>
+  <p>Los parámetros se ajustan <b>a la vez</b> con un optimizador global (evolución diferencial), contra el parque oficial, el precio real, las viviendas terminadas y la deuda hipotecaria. Se repite con tres semillas distintas y llegan a la misma solución.</p>
+  <div class="legend"><span><i></i>Modelo</span><span><i class="dot"></i>Dato oficial</span></div>
+  <div class="charts" id="calcharts"></div>
+
+  <h3>Cómo hemos llegado hasta aquí</h3>
+  <div class="tw"><table>
+    <thead><tr><th>Versión</th><th class="n">Precio</th><th class="n">Parque</th><th class="n">Terminadas</th><th>Qué cambió</th></tr></thead><tbody>
+    <tr><td>V3</td><td class="n">38 %</td><td class="n">4,1 %</td><td class="n">18 %</td><td>Freno de la obra por exceso de vivienda sin vender. El precio no se ajustaba.</td></tr>
+    <tr><td>V4</td><td class="n">10 %</td><td class="n">1,3 %</td><td class="n">10 %</td><td>Ancla estadística entre el precio y la renta. Ajusta bien, pero no explica por qué.</td></tr>
+    <tr><td>V5</td><td class="n">14 %</td><td class="n">1,1 %</td><td class="n">13 %</td><td>Subsistema de financiación en lugar del ancla. Reproduce además la deuda (error 20 %).</td></tr>
+  </tbody></table></div>
+  <p class="small">Error cuadrático medio relativo, 1981-2024. Se perdieron cuatro puntos de ajuste del precio al sustituir el ancla por un mecanismo explicable, y se ganó la deuda.</p>
+
+  <h3>¿Predice la crisis?</h3>
+  <p>Se ajusta solo con los datos hasta 2007 y se mira qué ocurre de 2008 a 2024, sin haberlo visto:</p>
+  <div class="tw"><table>
+    <thead><tr><th>Estructura</th><th class="n">Error del precio 2008-2024</th></tr></thead><tbody>
+    <tr><td>Original (sin ancla ni financiación)</td><td class="n">64 %</td></tr>
+    <tr><td>Con ancla estadística (V4)</td><td class="n">22 %</td></tr>
+    <tr><td><b>Con financiación (V5)</b></td><td class="n"><b>16-18 %</b></td></tr>
+  </tbody></table></div>
+  <p class="small">La obra no se anticipa: el freno por exceso de vivienda sin vender solo se puede aprender de los datos de la propia crisis.</p>
+
+  <details><summary>Parámetros ajustados, con su significado y si los datos los identifican</summary>
+    <p class="small">«En el límite» significa que el optimizador ha dejado el parámetro en un extremo de su rango: no está bien identificado y no debe leerse literalmente.</p>
+    <div class="tw"><table id="ptab"><thead><tr><th>Parámetro</th><th class="n">Valor</th><th>Unidad</th><th>Qué es</th></tr></thead><tbody></tbody></table></div>
+  </details>
+</section>
+
+<section id="limites">
+  <h2>Lo que no sabemos</h2>
+  <p>Esta parte es tan importante como las anteriores.</p>
+  <div class="two">
+    <div><h4>Sabemos</h4><ul class="tight">
+      <li>El modelo cierra el balance de viviendas y reproduce el parque, el precio, la obra y la deuda con errores del 1 % al 20 %.</li>
+      <li>La entrada, más que la cuota, ha sido el límite del acceso desde mediados de los 90 (según el modelo).</li>
+      <li>El precio necesita una dinámica de expectativas que se retroalimenta con él.</li>
+    </ul></div>
+    <div><h4>No sabemos</h4><ul class="tight">
+      <li><b>Quién protagoniza esas expectativas.</b> Ajustando sin la pieza de las expectativas de los hogares, el optimizador usa el canal inversor con la misma calidad: las dos explicaciones son intercambiables con datos agregados.</li>
+      <li><b>El peso real de los fondos.</b> En el modelo, las compras inversoras son un 13 % del total al empezar: es un supuesto del estado inicial, no un dato.</li>
+      <li><b>Qué es vivienda asequible.</b> El modelo tiene un precio medio, no tramos de precio.</li>
+    </ul></div>
+  </div>
+  <div class="callout bad"><p><b>La proyección hasta 2050 no es fiable.</b> Con el subsistema de financiación sobran unos 4 millones de viviendas en 2050 y se terminan 305.000 al año. Con la versión anterior faltaban 3,9 millones y se terminaban 23.000. Ninguna está cerca de las 100.000 de 2024. El modelo no tiene restricciones de capacidad de construcción ni de suelo. Por eso el simulador se usa para comparar políticas entre sí, no para leer niveles.</p></div>
+  <h3>Qué datos decidirían la cuestión</h3>
+  <ul class="tight">
+    <li>El peso de las compras de personas jurídicas y de extranjeros en las compraventas.</li>
+    <li>La vivienda vacía en manos de fondos y sociedades.</li>
+    <li>Rentabilidades por alquiler por territorios, para poder comparar zonas con distinto peso inversor.</li>
+    <li>Un mercado de alquiler propio en el modelo (renta como variable) y una segmentación de la oferta por tramos de precio respecto a la renta.</li>
+  </ul>
+</section>
+
+<section id="tesis">
+  <h2>La tesis, probada: ¿cuándo se cumple?</h2>
+  <p>La tesis dice que más demanda de fondos sube el precio y reduce las compras de los hogares. En el modelo, esa cadena depende de <b>cuánto responde el precio a la presión de la demanda</b> y de <b>cuánto lo frena el límite que impone la financiación</b>. Aquí puedes moverlos.</p>
+  <div class="ctl">
+    <label class="sl"><span class="lab">Fuerza del límite financiero</span><output></output>
+      <select id="h-vf"><option value="0.0396">Ajustada a los datos (0,04)</option><option value="0.005">Débil (0,005)</option><option value="0">Ninguna</option></select></label>
+    <label class="sl"><span class="lab">Efecto medido en el año</span><output></output>
+      <select id="h-yr"><option value="2030">2030</option><option value="2035" selected>2035</option><option value="2040">2040</option></select></label>
+  </div>
+  <p class="small">Cada celda compara dos mundos con las mismas condiciones: la demanda de los fondos desde 2025 multiplicada por el factor de la fila, frente a la demanda actual. <b>Las columnas son la respuesta del precio a la presión</b> (a la derecha, más sensible).</p>
+  <h3>Cambio del precio</h3>
+  <div class="tw"><table class="heat" id="heat1"></table></div>
+  <h3>Cambio de las compras de los hogares</h3>
+  <div class="tw"><table class="heat" id="heat2"></table></div>
+  <div class="callout warn"><p id="heat-note"></p></div>
+</section>
+
+<section id="simulador">
+  <h2>Simulador de políticas (experimental)</h2>
+  <p>El modelo desde enero de 2025. A la izquierda de la línea vertical, lo ocurrido; a la derecha, la proyección con las políticas que elijas frente a no hacer nada. <b>Léelo por la diferencia entre las dos líneas, no por el nivel</b>: la proyección no es una predicción.</p>
+  <div class="presets" id="spre"></div>
+  <div class="ctl" id="ssl"></div>
+  <div class="kpis" id="skpi"></div>
+  <div class="legend"><span><i></i>Con tus políticas</span><span><i style="border-top:2px dashed var(--ref)"></i>Sin políticas nuevas</span><span><i class="dot"></i>Dato oficial</span></div>
+  <div class="charts" id="scharts"></div>
+  <p class="small">Los tipos de interés y el plazo no tienen efecto desde 2025 en esta versión, porque con los tipos actuales limita la entrada y no la cuota. Subir el préstamo sobre valor sí tiene efecto, pero está fuera del rango observado (56-67 %).</p>
+</section>
+
+<section id="fuentes">
+  <h2>Fuentes, método y cómo reproducirlo</h2>
+  <h3>Fuentes</h3>
+  <ul class="tight">
+    <li>Ministerio de Vivienda y Agenda Urbana, <i>Observatorio de Vivienda y Suelo, Boletín Anual 2024</i> (parque, hogares, viviendas terminadas, valor tasado, financiación, rentabilidades).</li>
+    <li>INE: Censos de Población y Viviendas (1981 a 2021), Encuesta de Población Activa, proyecciones de hogares y población.</li>
+    <li>Banco de España y Estadística Registral Inmobiliaria (tipos, plazos, préstamo sobre valor, esfuerzo, deuda, rentabilidades).</li>
+    <li>BIS (Banco de Pagos Internacionales): índice de precios de la vivienda de España, crédito a hogares y tipos oficiales.</li>
+    <li>Banco Mundial: PIB per cápita real, inflación, paro y población.</li>
+  </ul>
+  <h3>Método</h3>
+  <ul class="tight">
+    <li>Modelo de stocks y flujos con tiempo en meses, integración de Euler con paso de un cuarto de mes, en euros constantes de 2010.</li>
+    <li>Ajuste con evolución diferencial y pulido local, con tres semillas independientes. Los errores son cuadráticos medios relativos.</li>
+    <li>Pruebas: periodo reservado (ajustar hasta 2007, predecir 2008-2024), un mecanismo cada vez y perfiles de los parámetros (por ejemplo, forzar la sensibilidad inversora de 0 a 80 y reajustar el resto).</li>
+  </ul>
+  <h3>Archivos</h3>
+  <p>El modelo para Vensim (versión V5, con seis vistas), los datos en CSV con su fuente y los scripts de ajuste están disponibles junto a esta página. El modelo se ha construido con Vensim PLE, de uso personal y educativo.</p><ul class="tight"><li><a href="archivos/Vivienda_V5_Financiacion_2050.mdl">Modelo de Vensim (V5, con 6 vistas)</a></li><li><a href="archivos/Vivienda_V5_Financiacion_2050_solo_ecuaciones.mdl">Modelo de Vensim, solo ecuaciones</a></li><li><a href="archivos/params_ajustados_V5.json">Parámetros ajustados (JSON)</a></li><li><a href="archivos/FUENTES.md">Inventario de datos y fuentes</a></li><li><a href="archivos/Resultados_V5_financiacion.md">Resultados detallados del modelo V5</a></li><li><a href="archivos/datos/BIS_credito_hogares_pct_PIB_Espana_1980_.csv">Datos: BIS_credito_hogares_pct_PIB_Espana_1980_.csv</a></li><li><a href="archivos/datos/BIS_precio_vivienda_Espana_nominal_1971_.csv">Datos: BIS_precio_vivienda_Espana_nominal_1971_.csv</a></li><li><a href="archivos/datos/BIS_precio_vivienda_Espana_real_1971_.csv">Datos: BIS_precio_vivienda_Espana_real_1971_.csv</a></li><li><a href="archivos/datos/BIS_tipo_oficial_Espana_1945_1998.csv">Datos: BIS_tipo_oficial_Espana_1945_1998.csv</a></li><li><a href="archivos/datos/BIS_tipo_oficial_zona_euro_1999_.csv">Datos: BIS_tipo_oficial_zona_euro_1999_.csv</a></li><li><a href="archivos/datos/WB_Espana_PIB_per_capita_USD2015_1975_2025.csv">Datos: WB_Espana_PIB_per_capita_USD2015_1975_2025.csv</a></li><li><a href="archivos/datos/WB_Espana_RNB_per_capita_USD2015_1975_2024.csv">Datos: WB_Espana_RNB_per_capita_USD2015_1975_2024.csv</a></li><li><a href="archivos/datos/WB_Espana_consumo_privado_real_1975_2025.csv">Datos: WB_Espana_consumo_privado_real_1975_2025.csv</a></li><li><a href="archivos/datos/WB_Espana_inflacion_IPC_pct_1975_2025.csv">Datos: WB_Espana_inflacion_IPC_pct_1975_2025.csv</a></li><li><a href="archivos/datos/WB_Espana_paro_pct_1975_2025.csv">Datos: WB_Espana_paro_pct_1975_2025.csv</a></li><li><a href="archivos/datos/WB_Espana_poblacion_1975_2025.csv">Datos: WB_Espana_poblacion_1975_2025.csv</a></li><li><a href="archivos/datos/financiacion_hipotecas_2003_2024.csv">Datos: financiacion_hipotecas_2003_2024.csv</a></li><li><a href="archivos/datos/parque_hogares_1981_2024.csv">Datos: parque_hogares_1981_2024.csv</a></li><li><a href="archivos/datos/parque_mivau_principal_noprincipal_2003_2023.csv">Datos: parque_mivau_principal_noprincipal_2003_2023.csv</a></li><li><a href="archivos/datos/precio_valor_tasado_eur_m2_2003_2024.csv">Datos: precio_valor_tasado_eur_m2_2003_2024.csv</a></li><li><a href="archivos/datos/rentabilidad_vivienda_alternativas_1996_2024.csv">Datos: rentabilidad_vivienda_alternativas_1996_2024.csv</a></li><li><a href="archivos/datos/tenencia_viviendas_principales_censos.csv">Datos: tenencia_viviendas_principales_censos.csv</a></li><li><a href="archivos/datos/viviendas_iniciadas_terminadas_2003_2024.csv">Datos: viviendas_iniciadas_terminadas_2003_2024.csv</a></li><li><a href="scripts/">Scripts de extracción, ajuste y generación de esta página</a></li></ul>
+  <footer>
+    <p><b>Autor:</b> Pedro Manuel Retortillo Atienza. Estudio abierto y en curso; versión del 23 de noviembre de 2026. Es un modelo conceptual: explora supuestos, no predice.</p>
+  </footer>
+</section>
+</div>
+
+<script>
+const NAMES=["Viviendas venta", "Uso propio", "Vacias inversor", "Alquiladas", "Secundarias", "Deterioradas", "Parque retirado", "En construccion", "Edad media", "Obra terminada", "Obra a venta", "Obra a secundarias", "Reventa propietarios", "Venta inversor", "Puesta en alquiler", "Fin de contrato", "Secundarias a venta", "Inicio obra", "Compra hogares", "Compra inversora", "Tasa deterioro", "Deterioro venta", "Deterioro uso propio", "Deterioro vacias inversor", "Deterioro alquiladas", "Deterioro secundarias", "Rehabilitacion", "Demolicion", "Envejecimiento", "Rejuvenecimiento", "Precio", "Expectativa ge", "Precio efectivo", "Oferta venta", "Reparto", "Demanda hogares", "Expectativa usada", "Rentabilidad inversora", "Demanda inversora", "Presion", "Cambio bruto precio", "Cambio precio", "Cambio precio efectivo", "Cambio expectativa", "Precio minimo", "Coste suelo", "Coste obra", "Margen obra", "Hogares", "Hogares objetivo", "Formacion hogares", "Disolucion hogares", "Parque habitable", "Parque fisico", "Obras acumuladas", "Error balance parque", "Vacancia", "Indice precio", "Precio sobre ingreso", "Alquiler sobre ingreso", "Disponibles por mil hogares", "Hogares sin alojar", "Desviacion parque", "Desviacion precio", "Hogares dato", "Ingreso indice dato", "Tipo capital dato", "Credito indice dato", "Precio dato", "Crecimiento precio dato", "Parque dato", "Ingreso", "tau uso propio", "tau vacia inversor", "tau alquilar", "fraccion alquiler", "tau contrato", "tau venta", "tau obra", "tau secundaria", "fraccion secundaria", "tau deterioro", "Edad ref", "Exponente edad", "tau rehabilitacion", "Capacidad rehabilitacion", "tau demolicion", "Demanda base hogares", "Demanda base inversora", "Elasticidad hogares", "Velocidad precio", "Techo desequilibrio", "Eps oferta", "Eps demanda", "Coste mantenimiento", "Riesgo regulacion", "Rentabilidad ref", "Sensibilidad inversora", "Fraccion suelo", "Coste materiales", "Coste mano obra", "Coste energia transporte", "Coste calidad", "Coste otros", "Margen minimo", "Inicio base", "Sensibilidad margen", "Margen ref", "Hogares ref", "Ingreso ref", "Precio ref", "tau expectativa", "Expectativa externa", "Interruptor expectativa", "Interruptor precio forzado", "Multiplicador inversor", "tau formacion", "tau disolucion", "Superficie tipo", "Factor inventario", "Exponente inventario", "Tope factor inventario", "Disponibles ref", "Elasticidad credito obra", "Ingreso indice", "Tipo capital", "Credito indice", "Multiplicador inversor efectivo", "Riesgo regulacion efectivo", "Politica obra efectiva", "Capacidad rehabilitacion efectiva", "Inicio politica", "Politica inversion", "Politica riesgo", "Politica obra", "Politica rehabilitacion", "Politica tipos", "Politica credito", "Crecimiento ingreso futuro", "Crecimiento hogares futuro", "Tipo nominal dato", "Tipo nominal", "Paro dato", "Paro ref", "Elasticidad empleo", "Factor empleo", "Elasticidad expectativa hogares", "Factor expectativa hogares", "Plazo hipoteca dato", "Plazo hipoteca", "Politica plazo", "Prestamo valor dato", "Prestamo valor", "Politica prestamo valor", "Renta alquiler dato", "Cuota anual por euro", "Capacidad por pago", "Capacidad por ahorro", "Capacidad hipotecaria", "Acceso", "Acceso ref", "Factor acceso", "Precio fundamental", "Brecha financiera", "Esfuerzo maximo", "Ahorro anios", "Elasticidad acceso", "Relacion precio capacidad", "Velocidad financiera", "Cuota ref", "Prestamo valor ref", "Precio sobre ingreso ref", "Deuda hipotecaria", "Nuevos prestamos", "Fraccion hipotecada", "Amortizacion", "Fraccion vida media", "Deuda sobre renta", "Deuda indice", "Desviacion deuda", "Ingreso indice 2024", "Renta alquiler efectiva"];
+const UNITS=["Vivienda", "Vivienda", "Vivienda", "Vivienda", "Vivienda", "Vivienda", "Vivienda", "Vivienda", "Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "1/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Vivienda/Month", "Month/Month", "Month/Month", "Euro/Metro2", "1/Year", "Euro/Metro2", "Vivienda/Month", "Dmnl", "Vivienda/Month", "1/Year", "1/Year", "Vivienda/Month", "Dmnl", "Euro/Metro2/Month", "Euro/Metro2/Month", "Euro/Metro2/Month", "1/Year/Month", "Euro/Metro2", "Euro/Metro2", "Euro/Metro2", "Euro/Metro2", "Hogar", "Hogar", "Hogar/Month", "Hogar/Month", "Vivienda", "Vivienda", "Vivienda", "Vivienda", "Dmnl", "Dmnl", "Year", "Dmnl", "Vivienda/Hogar", "Hogar", "Dmnl", "Dmnl", "Hogar", "Dmnl", "1/Year", "Dmnl", "Euro/Metro2", "1/Year", "Vivienda", "Euro/Month", "Month", "Month", "Month", "Dmnl", "Month", "Month", "Month", "Month", "Dmnl", "Month", "Month", "Dmnl", "Month", "Vivienda/Month", "Month", "Vivienda/Month", "Vivienda/Month", "Dmnl", "1/Month", "Dmnl", "Vivienda/Month", "Vivienda/Month", "1/Year", "1/Year", "1/Year", "Year", "Dmnl", "Euro/Metro2", "Euro/Metro2", "Euro/Metro2", "Euro/Metro2", "Euro/Metro2", "Euro/Metro2", "Vivienda/Month", "Dmnl", "Euro/Metro2", "Hogar", "Euro/Month", "Euro/Metro2", "Month", "1/Year", "Dmnl", "Dmnl", "Dmnl", "Month", "Month", "Metro2", "Dmnl", "Dmnl", "Dmnl", "Vivienda/Hogar", "Dmnl", "Dmnl", "1/Year", "Dmnl", "Dmnl", "1/Year", "Dmnl", "Vivienda/Month", "Month", "Dmnl", "1/Year", "Dmnl", "Dmnl", "1/Year", "Dmnl", "1/Year", "1/Year", "1/Year", "1/Year", "Dmnl", "Dmnl", "Dmnl", "Dmnl", "Dmnl", "Dmnl", "Month", "Month", "Month", "Dmnl", "Dmnl", "Dmnl", "Euro/Metro2/Month", "1/Year", "Year", "Year", "Year", "Dmnl", "Dmnl", "Dmnl", "Euro/Metro2", "Dmnl", "Dmnl", "Year", "Dmnl", "Dmnl", "1/Month", "1/Year", "Dmnl", "Year", "Euro", "Euro/Month", "Dmnl", "Euro/Month", "Dmnl", "Dmnl", "Dmnl", "Dmnl", "Dmnl", "Euro/Metro2/Month"];
+const NOTES=["Vs: vacias en venta.", "O: principales en propiedad o cedidas (73,1 % + 6,1 % del censo de 1981).", "Vi: vacias retenidas fuera del mercado (desocupadas del censo).", "R: principales en alquiler (20,8 % del censo de 1981).", "Segundas residencias (censo 1981: 1.898.602).", "No habitables o pendientes de recuperar.", "Demolidas (acumulado).", "U: en obra.", "Antiguedad media del parque (30 anos en 1981, supuesto).", "C: viviendas terminadas.", "Terminadas que salen a la venta.", "Terminadas que son segunda residencia.", "E_h.", "E_i.", "L_i.", "F_R.", "Segundas residencias que se ponen a la venta.", "I_nuevo: margen x inventario x credito x politica.", "B_h.", "A_i.", "Deterioro por mes; crece con la edad.", "", "", "", "", "", "H: vuelve a venta.", "Da.", "", "", "P endogeno (euros de 2010).", "g_e.", "Precio usado por el resto: el dato si esta forzado.", "Q_s.", "lambda.", "D_h*.", "", "r_i.", "D_i*.", "", "", "", "Variacion del precio usada para las expectativas.", "", "", "El suelo cuesta una fraccion del precio.", "", "", "H.", "H* = EPA hasta 2024; despues crece al ritmo de la proyeccion.", "", "", "", "N.", "", "Debe valer 0.", "", "", "", "", "", "", "Frente a la estimacion oficial.", "Frente al indice real del BIS anclado.", "Hogares de la EPA (INE); 1982-84 interpolados.", "PIB per capita real / 1981 (proxy de la renta).", "Tipo oficial + 1,5 puntos - inflacion (real).", "Credito a hogares / PIB, base 1981.", "Indice real BIS x 19,31 (euros de 2010).", "Variacion anual del precio dato (continua).", "Parque total oficial (BdE hasta 2000, MIVAU desde 2001).", "Ingreso real por hogar (euros de 2010).", "Permanencia media del propietario. A CALIBRAR.", "Se calcula para el equilibrio de 1981.", "Se calcula para el equilibrio de 1981.", "", "", "", "A CALIBRAR.", "Salida de segundas residencias a venta.", "Parte de la obra que son segundas residencias; se calcula para 1981.", "A CALIBRAR.", "", "A CALIBRAR.", "", "A CALIBRAR.", "A CALIBRAR.", "Se calcula para el equilibrio de 1981.", "Se calcula para el equilibrio de 1981.", "A CALIBRAR.", "A CALIBRAR.", "", "", "", "", "", "Rentabilidad de 1981 (base de la demanda inversora).", "A CALIBRAR.", "A CALIBRAR.", "", "", "", "", "", "", "Obra de 1981 (aumento del parque 1981-85).", "A CALIBRAR.", "", "H0 de 1981 (EPA).", "Ingreso por hogar de 1981 que da el precio/renta de 2004 observado (7,67 anos).", "Precio de 1981 (BIS real x 19,31).", "A CALIBRAR.", "", "1 = expectativa endogena.", "1 = usar el precio real como dato (para ajustar la oferta).", "", "", "", "", "La obra se frena si hay mas vivienda sin vender por hogar que en 1981.", "A CALIBRAR (0 = sin efecto).", "", "Vacias en venta por mil hogares en 1981.", "A CALIBRAR (0 = sin efecto).", "Renta real relativa a 1981; despues crece al ritmo de la proyeccion.", "Tipo real; la politica puede sumarle puntos.", "Credito a hogares relativo a 1981 x politica.", "m_inv x politica.", "rho_pol + politica.", "", "", "Mes (desde enero de 1981) en que empiezan las politicas: 528 = enero de 2025, justo despues del ultimo dato.", "Multiplicador de la demanda inversora desde el inicio de la politica (1 = sin politica; 0,5 = recorte a la mitad).", "Puntos de riesgo regulatorio que se suman a la rentabilidad exigida.", "Multiplicador de los inicios de obra (impulso de la oferta).", "Multiplicador de la capacidad de rehabilitar.", "Puntos que se suman al tipo de interes real.", "Multiplicador del credito a hogares.", "Crecimiento real anual de la renta tras 2024. SUPUESTO.", "Crecimiento anual de los hogares tras 2024 (INE: +11,1 % en 15 anos, escenario central).", "Tipo hipotecario: oficial + 1,5 pts hasta 2003; observado en las hipotecas nuevas desde 2004 (Banco de España).", "Tipo hipotecario nominal; la politica puede sumarle puntos.", "Tasa de paro (INE/Banco Mundial).", "Paro de 1981.", "A PROBAR: la demanda cae con el paro.", "Efecto del paro sobre la demanda de los hogares.", "A PROBAR: los hogares compran mas si esperan que el precio suba.", "Efecto de la expectativa sobre la demanda de los hogares.", "Plazo medio de las hipotecas nuevas (2004-2024). Antes de 2004 se mantiene el de 2004 (supuesto).", "Plazo; la politica puede alargarlo.", "Meses que se suman al plazo de las hipotecas desde el inicio de la politica.", "Prestamo sobre valor de las hipotecas nuevas (2004-2024). Antes se mantiene el de 2004 (supuesto).", "Prestamo sobre valor; la politica (por ejemplo un aval publico) puede subirlo.", "Puntos (en tanto por uno) que se suman al prestamo/valor desde el inicio de la politica.", "Alquiler bruto = rentabilidad por alquiler observada (Banco de España, desde 1996) x precio real. Antes de 1996, la de 1996 (supuesto).", "Cuota anual por euro prestado (intereses + amortizacion).", "Anos de renta que un hogar puede pagar si dedica a la cuota su esfuerzo maximo.", "Anos de renta que puede pagar con su entrada (ahorro en anos de renta / parte no financiada).", "Anos de renta que puede pagar un hogar: manda la restriccion mas estricta.", "Capacidad de compra / precio, ambos en anos de renta. 1 = el precio justo cabe.", "Acceso de 1981.", "La demanda de los hogares sube o baja con el acceso, relativo a 1981.", "Precio que cabe en la capacidad de compra de un hogar medio.", "Precio frente a lo que financia el sistema.", "A CALIBRAR: parte de la renta que un hogar dedica como maximo a la cuota.", "A CALIBRAR: ahorro disponible para la entrada, en anos de renta.", "A CALIBRAR.", "A CALIBRAR: a que fraccion de la capacidad tiende el precio.", "A CALIBRAR: rapidez con que el precio se acerca a lo que financia el sistema.", "Cuota por euro de 1981.", "Prestamo sobre valor de referencia (2004).", "Precio sobre renta de 1981 en el modelo.", "Deuda hipotecaria de los hogares (euros de 2010). Inicio: 30 % de la renta anual total (supuesto, solo importa la forma).", "Compras financiadas x precio x superficie x prestamo/valor.", "A CALIBRAR: parte de las compras que se financian con hipoteca.", "Devolucion: el stock entre la vida media restante de los prestamos.", "A CALIBRAR: vida media restante de los prestamos como fraccion del plazo.", "Deuda / renta anual total de los hogares.", "Relativa al inicio. Se compara con el credito a hogares/PIB del BIS.", "Frente al credito a hogares sobre PIB (BIS) relativo a 1981.", "Indice de renta de 2024.", "Alquiler observado hasta 2024; despues crece con la renta."];
+const IDX={};NAMES.forEach((n,i)=>{IDX[n]=i});
+const ITE=(c,a,b)=>c?a:b, MIN=Math.min, MAX=Math.max;
+const PARAMS=[{i:28,v:1},{i:72,v:600.0},{i:73,v:1147.79520115},{i:74,v:39.48384118},{i:75,v:0.8},{i:76,v:48.0},{i:77,v:6.0},{i:78,v:10.00721207},{i:79,v:480.0},{i:80,v:0.28031182},{i:81,v:2400.0},{i:82,v:360},{i:83,v:1.0},{i:84,v:24.0},{i:85,v:40000.0},{i:86,v:1500.0},{i:87,v:39390.74001572},{i:88,v:5609.25998428},{i:89,v:0.42320805},{i:90,v:0.005},{i:91,v:0.30000028},{i:92,v:1.0},{i:93,v:1.0},{i:94,v:0.005},{i:95,v:0.005},{i:96,v:0.01743359},{i:97,v:2e-08},{i:98,v:0.49613845},{i:99,v:161.11344844},{i:100,v:126.58913806},{i:101,v:11.50810346},{i:102,v:17.26215519},{i:103,v:28.77025865},{i:104,v:28.77025865},{i:105,v:19755.10416667},{i:106,v:1.26712684},{i:107,v:287.7025865},{i:108,v:10153000.0},{i:109,v:892.295322},{i:110,v:575.405173},{i:111,v:59.99999913},{i:112,v:0.0},{i:113,v:1.0},{i:114,v:0.0},{i:115,v:1.0},{i:116,v:24.0},{i:117,v:24.0},{i:118,v:80.0},{i:120,v:1.26388009},{i:121,v:2.0},{i:122,v:26.593125},{i:123,v:4e-08},{i:131,v:528.0},{i:132,v:1.0},{i:133,v:0.0},{i:134,v:1.0},{i:135,v:1.0},{i:136,v:0.0},{i:137,v:1.0},{i:138,v:0.01},{i:139,v:0.007},{i:143,v:0.1417},{i:144,v:8.67276104},{i:146,v:12.30213115},{i:150,v:0.0},{i:153,v:0.0},{i:164,v:0.75741847},{i:165,v:3.59331285},{i:166,v:1.85273537},{i:167,v:0.74697729},{i:168,v:0.0396019},{i:169,v:0.18460789},{i:170,v:0.641},{i:171,v:4.29906377},{i:174,v:0.28129641},{i:176,v:0.99998735},{i:180,v:1.9811985}];
+const LOOK={64:{x:[6.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[10153000.0, 10721000.0, 11088000.0, 11217000.0, 11361000.0, 11595000.0, 11740000.0, 11834000.0, 12040000.0, 12155000.0, 12350000.0, 12415000.0, 12374000.0, 12560000.0, 12813000.0, 13100000.0, 13382000.0, 13776000.0, 14669200.0, 15082800.0, 15489800.0, 15922700.0, 16350400.0, 16824600.0, 17211600.0, 17490800.0, 17746500.0, 17995800.0, 18154100.0, 18245100.0, 18362000.0, 18395100.0, 18486400.0, 18529700.0, 18625000.0, 18746900.0, 18817800.0, 18990000.0, 19200700.0, 19487500.0, 19595200.0]},65:{x:[6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[1.0, 1.006404, 1.019241, 1.033132, 1.053292, 1.084314, 1.141498, 1.197109, 1.252928, 1.298982, 1.328668, 1.334463, 1.313867, 1.33879, 1.369649, 1.39952, 1.443661, 1.499549, 1.559329, 1.633105, 1.68537, 1.707518, 1.726205, 1.749519, 1.7813, 1.822262, 1.852049, 1.836721, 1.751924, 1.745518, 1.728196, 1.677592, 1.659639, 1.690076, 1.760164, 1.810078, 1.857976, 1.89391, 1.917263, 1.698827, 1.809138, 1.910601, 1.934686, 1.981199]},66:{x:[6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[0.035966, 0.049602, 0.105084, 0.049385, 0.049408, 0.043249, 0.121374, 0.078648, 0.086919, 0.093781, 0.0867, 0.084212, 0.080763, 0.044691, 0.056595, 0.054203, 0.048831, 0.038115, 0.01898, 0.02129, 0.021393, 0.016429, 0.007109, 0.004605, 0.001525, 0.007759, 0.025676, 0.012785, 0.030171, 0.007002, -0.004461, -0.00071, 0.00633, 0.018093, 0.020503, 0.017111, -0.004558, -0.001754, 0.008007, 0.018226, -0.01593, -0.062238, 0.018425, 0.027468]},67:{x:[6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[1.0, 1.035294, 1.027451, 0.929412, 0.929412, 0.945098, 1.043137, 1.14902, 1.235294, 1.215686, 1.231373, 1.231373, 1.247059, 1.231373, 1.235294, 1.266667, 1.352941, 1.494118, 1.658824, 1.788235, 1.854902, 2.007843, 2.223529, 2.490196, 2.780392, 3.066667, 3.211765, 3.247059, 3.333333, 3.305882, 3.231373, 3.192157, 3.043137, 2.866667, 2.65098, 2.513725, 2.388235, 2.298039, 2.215686, 2.435294, 2.243137, 2.015686, 1.807843, 1.713725]},68:{x:[6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[575.405173, 519.15997, 552.216277, 533.930189, 539.818774, 571.763307, 748.654493, 892.787712, 1030.70456, 1117.255359, 1205.325855, 1123.285389, 1069.772552, 1028.754733, 1016.731361, 1000.153726, 996.35738, 1023.808959, 1104.530552, 1159.517708, 1229.532871, 1380.542381, 1575.685379, 1796.031307, 1979.367205, 2111.070095, 2255.922611, 2136.891427, 2001.267642, 1931.261168, 1728.737405, 1438.451623, 1288.309615, 1294.19482, 1347.28863, 1412.53712, 1471.167108, 1544.176287, 1612.959472, 1654.396802, 1663.773255, 1648.790626, 1656.355318, 1748.534017]},69:{x:[6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[-0.102862, -0.020567, 0.014027, -0.011353, 0.03423, 0.163522, 0.222812, 0.15986, 0.112141, 0.078254, 0.002691, -0.059652, -0.043954, -0.025427, -0.014098, -0.010121, 0.011688, 0.051535, 0.062237, 0.053607, 0.087236, 0.124028, 0.131551, 0.114043, 0.080808, 0.065391, 0.006079, -0.059889, -0.050589, -0.073195, -0.147303, -0.14703, -0.052839, 0.022382, 0.043749, 0.043981, 0.044552, 0.046007, 0.034473, 0.015509, -0.001697, -0.002234, 0.029368, 0.054158]},70:{x:[6.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0],y:[14860272.0, 15808517.0, 15996196.0, 16188471.0, 16386778.0, 16660932.0, 16981114.0, 17336208.0, 17596571.0, 17827188.0, 18110360.0, 18351515.0, 18683320.0, 19057893.0, 19401745.0, 19836527.0, 20585624.0, 21033759.0, 21487307.0, 21926409.0, 22417950.0, 22927382.0, 23493772.0, 24034966.0, 24569715.0, 24908126.0, 25106251.0, 25249053.0, 25625078.0, 25620669.0, 25763853.0, 25906114.0, 26033976.0, 26170704.0, 26314435.0, 26463070.0, 26623708.0, 26719905.0, 26811833.0, 26902443.0]},140:{x:[6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[0.18146, 0.193752, 0.226825, 0.162188, 0.137552, 0.131198, 0.173854, 0.127021, 0.154833, 0.160999, 0.146042, 0.143458, 0.126454, 0.091875, 0.103333, 0.089792, 0.068542, 0.056458, 0.042083, 0.055625, 0.057292, 0.047083, 0.0375, 0.034, 0.035, 0.047, 0.055, 0.058, 0.026, 0.027, 0.037, 0.029, 0.032, 0.026, 0.023, 0.022, 0.021, 0.022, 0.019, 0.017, 0.015, 0.031, 0.04, 0.03]},142:{x:[6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[0.1417, 0.16017, 0.17486, 0.20248, 0.21641, 0.21259, 0.20607, 0.19854, 0.17331, 0.16273, 0.15929, 0.17697, 0.22156, 0.24209, 0.22675, 0.22142, 0.20698, 0.18673, 0.15475, 0.13785, 0.10348, 0.11146, 0.11283, 0.1109, 0.09146, 0.08452, 0.08232, 0.11254, 0.17857, 0.1986, 0.2139, 0.24789, 0.26094, 0.24441, 0.22057, 0.19635, 0.17224, 0.15255, 0.14104, 0.15532, 0.14914, 0.13033, 0.12179, 0.11344]},148:{x:[282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[293.0, 309.0, 332.0, 336.0, 307.0, 296.0, 302.0, 285.0, 279.0, 267.0, 273.0, 271.0, 278.0, 282.0, 289.0, 279.0, 287.0, 294.0, 296.0, 290.0, 304.0]},151:{x:[282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[0.641, 0.642, 0.638, 0.628, 0.598, 0.563, 0.58, 0.583, 0.589, 0.574, 0.609, 0.632, 0.642, 0.656, 0.665, 0.63, 0.652, 0.654, 0.639, 0.614, 0.615]},154:{x:[6.0, 18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0, 102.0, 114.0, 126.0, 138.0, 150.0, 162.0, 174.0, 186.0, 198.0, 210.0, 222.0, 234.0, 246.0, 258.0, 270.0, 282.0, 294.0, 306.0, 318.0, 330.0, 342.0, 354.0, 366.0, 378.0, 390.0, 402.0, 414.0, 426.0, 438.0, 450.0, 462.0, 474.0, 486.0, 498.0, 510.0, 522.0],y:[3.040057, 2.742895, 2.917543, 2.820931, 2.852043, 3.020816, 3.955391, 4.716895, 5.445556, 5.902832, 6.368138, 5.934691, 5.651965, 5.435254, 5.371731, 5.284146, 5.52148, 5.818648, 6.084122, 5.894215, 5.655851, 5.75226, 5.790644, 5.852069, 5.72367, 5.488782, 5.357816, 5.003887, 5.103232, 5.198311, 4.797246, 4.519136, 4.627179, 5.00422, 5.086015, 5.108676, 5.161345, 5.121518, 5.094264, 5.101057, 5.074508, 4.795233, 4.665401, 4.82304]}};
+const AUX=[{i:9,f:(X,T)=>X[7]/X[78]},{i:10,f:(X,T)=>(1-X[80])*X[9]},{i:11,f:(X,T)=>X[80]*X[9]},{i:12,f:(X,T)=>X[1]/X[72]},{i:13,f:(X,T)=>X[2]/X[73]},{i:14,f:(X,T)=>X[75]*X[2]/X[74]},{i:15,f:(X,T)=>X[3]/X[76]},{i:16,f:(X,T)=>X[4]/X[79]},{i:129,f:(X,T)=>ITE(T>=X[131], X[134], 1)},{i:60,f:(X,T)=>1000*X[0]/X[48]},{i:119,f:(X,T)=>MIN(X[121], (X[122]/(X[60]+0.001))**X[120])},{i:67,l:1},{i:126,f:(X,T)=>X[67]*ITE(T>=X[131], X[137], 1)},{i:68,l:1},{i:32,f:(X,T)=>ITE(X[114]==1, X[68], X[30])},{i:45,f:(X,T)=>X[98]*X[32]},{i:46,f:(X,T)=>X[45]+X[99]+X[100]+X[101]+X[102]+X[103]},{i:47,f:(X,T)=>X[32]-X[46]-X[104]},{i:17,f:(X,T)=>X[105]*X[129]*MAX(0, 1+X[106]*X[47]/X[107])*X[119]*X[126]**X[123]},{i:36,f:(X,T)=>ITE(X[113]==1, X[31], X[112])},{i:147,f:(X,T)=>2.718281828**(X[146]*X[36])},{i:142,l:1},{i:145,f:(X,T)=>2.718281828**(-X[144]*(X[142]-X[143]))},{i:160,f:(X,T)=>MIN(X[164]/(X[169]*X[170]), X[165]/(1-X[170]))/X[171]},{i:151,l:1},{i:152,f:(X,T)=>MIN(0.95, X[151]+ITE(T>=X[131], X[153], 0))},{i:157,f:(X,T)=>X[165]/(1-X[152])},{i:148,l:1},{i:149,f:(X,T)=>X[148]+ITE(T>=X[131], X[150], 0)},{i:140,l:1},{i:141,f:(X,T)=>X[140]+ITE(T>=X[131], X[136], 0)},{i:155,f:(X,T)=>MAX(0.005, X[141])/(1-(1+MAX(0.005, X[141]))**(-X[149]/12))},{i:156,f:(X,T)=>X[164]/(X[155]*X[152])},{i:158,f:(X,T)=>MIN(X[156], X[157])},{i:65,l:1},{i:124,f:(X,T)=>X[65]*(1+X[138])**(MAX(0,T-522)/12)},{i:71,f:(X,T)=>X[109]*X[124]},{i:58,f:(X,T)=>X[32]*X[118]/(12*X[71])},{i:159,f:(X,T)=>X[158]/X[58]},{i:161,f:(X,T)=>(X[159]/X[160])**X[166]},{i:35,f:(X,T)=>X[87]*(X[48]/X[108])**X[89]*X[161]*X[145]*X[147]},{i:127,f:(X,T)=>X[115]*ITE(T>=X[131], X[132], 1)},{i:128,f:(X,T)=>X[95]+ITE(T>=X[131], X[133], 0)},{i:154,l:1},{i:181,f:(X,T)=>X[154]*ITE(T>522, X[124]/X[180], 1)},{i:66,l:1},{i:125,f:(X,T)=>X[66]+ITE(T>=X[131], X[136], 0)},{i:37,f:(X,T)=>12*X[181]/X[32]+X[36]-X[125]-X[94]-X[128]},{i:38,f:(X,T)=>X[127]*X[88]*MAX(0, 1+X[97]*(X[37]-X[96]))},{i:33,f:(X,T)=>X[0]/X[77]},{i:34,f:(X,T)=>MIN(1, X[33]/(X[35]+X[38]+X[93]))},{i:18,f:(X,T)=>X[34]*X[35]},{i:19,f:(X,T)=>X[34]*X[38]},{i:20,f:(X,T)=>(1/X[81])*(X[8]/X[82])**X[83]},{i:21,f:(X,T)=>X[20]*X[0]},{i:22,f:(X,T)=>X[20]*X[1]},{i:23,f:(X,T)=>X[20]*X[2]},{i:24,f:(X,T)=>X[20]*X[3]},{i:25,f:(X,T)=>X[20]*X[4]},{i:130,f:(X,T)=>X[85]*ITE(T>=X[131], X[135], 1)},{i:26,f:(X,T)=>MIN(X[5]/X[84], X[130])},{i:27,f:(X,T)=>X[5]/X[86]},{i:52,f:(X,T)=>X[0]+X[1]+X[2]+X[3]+X[4]},{i:53,f:(X,T)=>X[52]+X[5]},{i:29,f:(X,T)=>X[8]*X[9]/X[53]},{i:39,f:(X,T)=>(X[35]+X[38])/(X[33]+X[92])},{i:162,f:(X,T)=>X[158]*12*X[71]/X[118]},{i:163,f:(X,T)=>X[32]/(X[167]*X[162])-1},{i:40,f:(X,T)=>X[90]*X[30]*MIN(X[39]-1, X[91])-X[168]*X[30]*X[163]},{i:44,f:(X,T)=>0.3*X[110]},{i:41,f:(X,T)=>ITE(X[30]>X[44], X[40], MAX(0, X[40]))},{i:69,l:1},{i:42,f:(X,T)=>ITE(X[114]==1, X[69]*X[68]/12, X[41])},{i:43,f:(X,T)=>(12*X[42]/X[32]-X[31])/X[111]},{i:64,l:1},{i:49,f:(X,T)=>X[64]*(1+X[139])**(MAX(0,T-522)/12)},{i:50,f:(X,T)=>MAX(0, (X[49]-X[48])/X[116])},{i:51,f:(X,T)=>MAX(0, (X[48]-X[49])/X[117])},{i:55,f:(X,T)=>X[53]-(14860272.0+X[54]-X[6])},{i:56,f:(X,T)=>(X[0]+X[2])/X[52]},{i:57,f:(X,T)=>100*X[32]/X[110]},{i:59,f:(X,T)=>X[181]*X[118]/X[71]},{i:61,f:(X,T)=>X[48]-(X[1]+X[3])},{i:70,l:1},{i:62,f:(X,T)=>(X[53]-X[70])/X[70]},{i:63,f:(X,T)=>(X[32]-X[68])/X[68]},{i:173,f:(X,T)=>X[174]*(X[18]+X[19])*X[32]*X[118]*X[152]},{i:175,f:(X,T)=>X[172]/(X[149]*X[176])},{i:177,f:(X,T)=>X[172]/(X[71]*X[48]*12)},{i:178,f:(X,T)=>X[177]/0.3},{i:179,f:(X,T)=>X[178]/X[126]-1}];
+const STK=[{i:0,rate:(X,T)=>X[10]+X[12]+X[13]+X[26]+X[16]-X[18]-X[19]-X[21],init:(X,T)=>270000.0},{i:1,rate:(X,T)=>X[18]-X[12]-X[22],init:(X,T)=>8041176.0},{i:2,rate:(X,T)=>X[19]+X[15]-X[14]-X[13]-X[23],init:(X,T)=>2258287.5},{i:3,rate:(X,T)=>X[14]-X[15]-X[24],init:(X,T)=>2111824.0},{i:4,rate:(X,T)=>X[11]-X[16]-X[25],init:(X,T)=>1898602.0},{i:5,rate:(X,T)=>X[21]+X[22]+X[23]+X[24]+X[25]-X[26]-X[27],init:(X,T)=>280382.5},{i:6,rate:(X,T)=>X[27],init:(X,T)=>0},{i:7,rate:(X,T)=>X[17]-X[10]-X[11],init:(X,T)=>474122.5},{i:8,rate:(X,T)=>X[28]-X[29],init:(X,T)=>360},{i:30,rate:(X,T)=>X[41],init:(X,T)=>X[110]},{i:31,rate:(X,T)=>X[43],init:(X,T)=>0},{i:48,rate:(X,T)=>X[50]-X[51],init:(X,T)=>10153000.0},{i:54,rate:(X,T)=>X[9],init:(X,T)=>0},{i:172,rate:(X,T)=>X[173]-X[175],init:(X,T)=>32614107854.0}];
+const NSTEP=3360, DT=0.25;
+const LKARR={};
+(function(){for(const k in LOOK){const xs=LOOK[k].x,ys=LOOK[k].y,a=new Float64Array(NSTEP+1);let j=0;
+  for(let s=0;s<=NSTEP;s++){const t=s*DT;if(t<=xs[0])a[s]=ys[0];else if(t>=xs[xs.length-1])a[s]=ys[ys.length-1];
+   else{while(xs[j+1]<t)j++;const f=(t-xs[j])/(xs[j+1]-xs[j]);a[s]=ys[j]+f*(ys[j+1]-ys[j]);}}
+  LKARR[k]=a;}})();
+function simulate(ov,want){
+  const X=new Float64Array(NAMES.length);
+  for(const p of PARAMS){const n=NAMES[p.i];X[p.i]=(ov&&ov[n]!==undefined)?ov[n]:p.v;}
+  for(const a of AUX){if(a.l)X[a.i]=LKARR[a.i][0];else{const r=a.f(X,0);X[a.i]=Number.isFinite(r)?r:0;}}
+  for(const s of STK){X[s.i]=s.init(X,0);}
+  const res={};for(const w of want)res[w]=new Float64Array(841);
+  const d=new Float64Array(STK.length);
+  for(let k=0;k<=NSTEP;k++){
+    const T=k*DT;
+    for(const a of AUX){if(a.l)X[a.i]=LKARR[a.i][k];else X[a.i]=a.f(X,T);}
+    if(k%4===0){const m=k/4;for(const w of want)res[w][m]=X[IDX[w]];}
+    if(k===NSTEP)break;
+    for(let j=0;j<STK.length;j++)d[j]=STK[j].rate(X,T);
+    for(let j=0;j<STK.length;j++)X[STK[j].i]+=d[j]*DT;
+  }
+  return res;
+}
+
+const DATA={"precio": {"1981": 575.4, "1982": 519.2, "1983": 552.2, "1984": 533.9, "1985": 539.8, "1986": 571.8, "1987": 748.7, "1988": 892.8, "1989": 1030.7, "1990": 1117.3, "1991": 1205.3, "1992": 1123.3, "1993": 1069.8, "1994": 1028.8, "1995": 1016.7, "1996": 1000.2, "1997": 996.4, "1998": 1023.8, "1999": 1104.5, "2000": 1159.5, "2001": 1229.5, "2002": 1380.5, "2003": 1575.7, "2004": 1796.0, "2005": 1979.4, "2006": 2111.1, "2007": 2255.9, "2008": 2136.9, "2009": 2001.3, "2010": 1931.3, "2011": 1728.7, "2012": 1438.5, "2013": 1288.3, "2014": 1294.2, "2015": 1347.3, "2016": 1412.5, "2017": 1471.2, "2018": 1544.2, "2019": 1613.0, "2020": 1654.4, "2021": 1663.8, "2022": 1648.8, "2023": 1656.4, "2024": 1748.5}, "parque": {"1981": 14860272.0, "1985": 15808517.0, "1986": 15996196.0, "1987": 16188471.0, "1988": 16386778.0, "1989": 16660932.0, "1990": 16981114.0, "1991": 17336208.0, "1992": 17596571.0, "1993": 17827188.0, "1994": 18110360.0, "1995": 18351515.0, "1996": 18683320.0, "1997": 19057893.0, "1998": 19401745.0, "1999": 19836527.0, "2000": 20585624.0, "2001": 21033759.0, "2002": 21487307.0, "2003": 21926409.0, "2004": 22417950.0, "2005": 22927382.0, "2006": 23493772.0, "2007": 24034966.0, "2008": 24569715.0, "2009": 24908126.0, "2010": 25106251.0, "2011": 25249053.0, "2012": 25625078.0, "2013": 25620669.0, "2014": 25763853.0, "2015": 25906114.0, "2016": 26033976.0, "2017": 26170704.0, "2018": 26314435.0, "2019": 26463070.0, "2020": 26623708.0, "2021": 26719905.0, "2022": 26811833.0, "2023": 26902443.0}, "epa": {"1981": 10153000.0, "1985": 10721000.0, "1986": 11088000.0, "1987": 11217000.0, "1988": 11361000.0, "1989": 11595000.0, "1990": 11740000.0, "1991": 11834000.0, "1992": 12040000.0, "1993": 12155000.0, "1994": 12350000.0, "1995": 12415000.0, "1996": 12374000.0, "1997": 12560000.0, "1998": 12813000.0, "1999": 13100000.0, "2000": 13382000.0, "2001": 13776000.0, "2002": 14669200.0, "2003": 15082800.0, "2004": 15489800.0, "2005": 15922700.0, "2006": 16350400.0, "2007": 16824600.0, "2008": 17211600.0, "2009": 17490800.0, "2010": 17746500.0, "2011": 17995800.0, "2012": 18154100.0, "2013": 18245100.0, "2014": 18362000.0, "2015": 18395100.0, "2016": 18486400.0, "2017": 18529700.0, "2018": 18625000.0, "2019": 18746900.0, "2020": 18817800.0, "2021": 18990000.0, "2022": 19200700.0, "2023": 19487500.0, "2024": 19595200.0}, "term": {"2003": 503724.0, "2004": 563923.0, "2005": 591604.0, "2006": 658510.0, "2007": 647179.0, "2008": 632218.0, "2009": 424459.0, "2010": 276883.0, "2011": 179351.0, "2012": 133415.0, "2013": 60289.0, "2014": 50428.0, "2015": 49472.0, "2016": 44630.0, "2017": 54274.0, "2018": 64044.0, "2019": 78810.0, "2020": 87504.0, "2021": 94728.0, "2022": 89545.0, "2023": 89320.0, "2024": 100980.0}, "tipo": {"1981": 18.15, "1982": 19.38, "1983": 22.68, "1984": 16.22, "1985": 13.76, "1986": 13.12, "1987": 17.39, "1988": 12.7, "1989": 15.48, "1990": 16.1, "1991": 14.6, "1992": 14.35, "1993": 12.65, "1994": 9.19, "1995": 10.33, "1996": 8.98, "1997": 6.85, "1998": 5.65, "1999": 4.21, "2000": 5.56, "2001": 5.73, "2002": 4.71, "2003": 3.75, "2004": 3.4, "2005": 3.5, "2006": 4.7, "2007": 5.5, "2008": 5.8, "2009": 2.6, "2010": 2.7, "2011": 3.7, "2012": 2.9, "2013": 3.2, "2014": 2.6, "2015": 2.3, "2016": 2.2, "2017": 2.1, "2018": 2.2, "2019": 1.9, "2020": 1.7, "2021": 1.5, "2022": 3.1, "2023": 4.0, "2024": 3.0}, "ltv": {"2004": 64.1, "2005": 64.2, "2006": 63.8, "2007": 62.8, "2008": 59.8, "2009": 56.3, "2010": 58.0, "2011": 58.3, "2012": 58.9, "2013": 57.4, "2014": 60.9, "2015": 63.2, "2016": 64.2, "2017": 65.6, "2018": 66.5, "2019": 63.0, "2020": 65.2, "2021": 65.4, "2022": 63.9, "2023": 61.4, "2024": 61.5}, "credito": {"1981": 25.5, "1982": 26.4, "1983": 26.2, "1984": 23.7, "1985": 23.7, "1986": 24.1, "1987": 26.6, "1988": 29.3, "1989": 31.5, "1990": 31.0, "1991": 31.4, "1992": 31.4, "1993": 31.8, "1994": 31.4, "1995": 31.5, "1996": 32.3, "1997": 34.5, "1998": 38.1, "1999": 42.3, "2000": 45.6, "2001": 47.3, "2002": 51.2, "2003": 56.7, "2004": 63.5, "2005": 70.9, "2006": 78.2, "2007": 81.9, "2008": 82.8, "2009": 85.0, "2010": 84.3, "2011": 82.4, "2012": 81.4, "2013": 77.6, "2014": 73.1, "2015": 67.6, "2016": 64.1, "2017": 60.9, "2018": 58.6, "2019": 56.5, "2020": 62.1, "2021": 57.2, "2022": 51.4, "2023": 46.1, "2024": 43.7}, "pyi": {"2003": 6.52, "2004": 7.67, "2005": 8.4, "2006": 9.11, "2007": 9.32, "2008": 8.76, "2009": 8.72, "2010": 8.71, "2011": 7.76, "2012": 7.19, "2013": 6.67, "2014": 6.72, "2015": 6.65, "2016": 6.7, "2017": 6.83, "2018": 6.96, "2019": 6.8, "2020": 7.11, "2021": 7.27, "2022": 7.45, "2023": 7.07, "2024": 7.25}, "yld": {"1996": 6.34, "1997": 6.65, "1998": 6.82, "1999": 6.61, "2000": 6.1, "2001": 5.52, "2002": 5.0, "2003": 4.41, "2004": 3.91, "2005": 3.47, "2006": 3.12, "2007": 2.85, "2008": 2.81, "2009": 3.06, "2010": 3.23, "2011": 3.33, "2012": 3.77, "2013": 4.31, "2014": 4.64, "2015": 4.53, "2016": 4.34, "2017": 4.21, "2018": 3.98, "2019": 3.79, "2020": 3.7, "2021": 3.66, "2022": 3.49, "2023": 3.38, "2024": 3.31}};
+const PROFV={"0.005_0.005": 15.1, "0.0396_0.005": 14.3, "0.005_0.01": 16.0, "0.0396_0.01": 13.6, "0.005_0.02": 23.6, "0.0396_0.02": 15.0, "0.005_0.05": 39.9, "0.0396_0.05": 28.9, "0.005_0.1": 45.6, "0.0396_0.1": 35.2};
+const PTAB=[["Esfuerzo máximo", "0,757", "fracción de la renta", "Parte de la renta que un hogar dedica como máximo a la cuota. Casi nunca limita desde los años 90: no está bien identificado.", false], ["Ahorro para la entrada", "3,59", "años de renta", "Ahorro que un hogar medio aporta como entrada.", false], ["Elasticidad de la demanda al acceso", "1,85", "—", "Cuánto cambia la demanda de los hogares cuando cambia su capacidad de compra respecto al precio.", false], ["Relación precio / capacidad", "0,747", "—", "A qué fracción de la capacidad de compra tiende el precio.", false], ["Velocidad hacia lo que financia el sistema", "0,0396", "1/mes", "Rapidez con que el precio se acerca a su valor financiable.", false], ["Parte de las compras con hipoteca", "0,281", "fracción", "Para el stock de deuda. Compensa con la vida media de los préstamos.", false], ["Vida media restante de los préstamos", "1", "fracción del plazo", "Para el stock de deuda.", true], ["Respuesta de la obra al margen", "1,27", "—", "Cuánto aumentan los inicios de obra cuando el margen sube.", false], ["Coste del suelo sobre el precio", "0,496", "fracción", "El suelo cuesta una fracción del precio de la vivienda.", false], ["Plazo de obra", "10", "meses", "Tiempo medio hasta terminar una vivienda.", false], ["Freno por vivienda sin vender", "1,26", "—", "Cuánto se frena la obra si hay más vivienda en venta por hogar que en 1981.", false], ["Efecto del crédito sobre la obra", "4,27e-08", "—", "Ajustado a cero: los datos no lo necesitan.", true], ["Respuesta del precio a la presión", "0,005", "1/mes", "Cuánto sube el precio cuando la demanda supera la oferta. Es la clave de la tesis: ver el mapa de condiciones.", true], ["Elasticidad de la demanda al número de hogares", "0,423", "—", "Escala de la demanda con los hogares.", false], ["Techo del desequilibrio", "0,3", "—", "Límite a la velocidad de subida del precio.", true], ["Memoria de las expectativas", "60", "meses", "Retraso con que la expectativa sigue al precio.", true], ["Expectativas de los hogares", "12,3", "—", "Pieza estadística: mejora el ajuste, pero no se deduce de una estadística concreta.", false], ["Efecto del paro sobre la demanda", "8,67", "—", "Pieza estadística: el paro reduce la demanda de compra.", false], ["Respuesta de la inversión a la rentabilidad", "2,01e-08", "años", "Ajustada a cero: con datos agregados el canal no se distingue (ver «Lo que no sabemos»).", true], ["Deterioro, demolición, edad", "fijos", "—", "Deterioro con vida de 2.400 meses y demolición de 1.500: no hay datos que los identifiquen, se dejan casi apagados.", false]];
+
+const $=(id)=>document.getElementById(id);
+const fmtN=(d)=>new Intl.NumberFormat('es-ES',{maximumFractionDigits:d,minimumFractionDigits:d});
+const f0=fmtN(0),f1=fmtN(1),f2=fmtN(2);
+const DEF={};PARAMS.forEach(p=>DEF[NAMES[p.i]]=p.v);
+const yr=(m)=>1981+m/12;
+function niceTicks(lo,hi,n){
+  if(hi-lo<1e-9){hi=lo+1}
+  const raw=(hi-lo)/n,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;
+  const step=(f<1.5?1:f<3?2:f<7?5:10)*p;
+  const a=Math.floor(lo/step)*step,b=Math.ceil(hi/step)*step,t=[];
+  for(let v=a;v<=b+step*0.001;v+=step)t.push(+v.toFixed(10));
+  return {t,a,b};
+}
+/* grafica generica: series = [{lab,col,w,dash,pts:[[año,valor]...]}], puntos de dato = [{lab,pts}] */
+function chart(host,o){
+  const W=640,H=250,L=58,R=14,Tp=o.split?24:12,B=28,pw=W-L-R,ph=H-Tp-B;
+  const x0=o.x0||1981,x1=o.x1||2024;
+  let lo=Infinity,hi=-Infinity;
+  const all=[...(o.series||[]),...(o.dots||[])];
+  all.forEach(s=>s.pts.forEach(p=>{const v=p[1];if(Number.isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v}}));
+  if(o.zero)lo=Math.min(lo,0);
+  const pad=(hi-lo)*0.07||1,tk=niceTicks(lo-(o.zero&&lo>=0?0:pad),hi+pad,4);
+  const X=a=>L+pw*(a-x0)/(x1-x0),Y=v=>Tp+ph*(1-(v-tk.a)/(tk.b-tk.a));
+  const fm=fmtN(o.dec||0);
+  let g='';
+  if(o.split){g+=`<rect x="${X(o.split)}" y="${Tp}" width="${X(x1)-X(o.split)}" height="${ph}" fill="var(--proj-bg)"/>`}
+  tk.t.forEach(v=>{g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${L-6}" y="${Y(v)+4}" text-anchor="end">${fm.format(v)}</text>`});
+  const step=x1-x0>60?20:10;
+  for(let a=Math.ceil(x0/step)*step;a<=x1;a+=step){g+=`<line x1="${X(a)}" x2="${X(a)}" y1="${Tp+ph}" y2="${Tp+ph+4}" stroke="var(--muted)"/><text x="${X(a)}" y="${H-9}" text-anchor="middle">${a}</text>`}
+  g+=`<text x="${L}" y="${H-9}" text-anchor="start">${x0===1981?'1981':''}</text>`;
+  (o.series||[]).forEach(s=>{
+    const p=s.pts.filter(q=>Number.isFinite(q[1]));if(!p.length)return;
+    g+=`<path d="${p.map((q,j)=>(j?'L':'M')+X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1)).join('')}" fill="none" stroke="${s.col||'var(--accent)'}" stroke-width="${s.w||2.3}" ${s.dash?'stroke-dasharray="6 4"':''} stroke-linejoin="round"/>`});
+  (o.dots||[]).forEach(s=>{
+    g+=`<path d="${s.pts.map((q,j)=>(j?'L':'M')+X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1)).join('')}" fill="none" stroke="var(--data)" stroke-width="1" opacity=".5"/>`;
+    s.pts.forEach(q=>{g+=`<circle cx="${X(q[0])}" cy="${Y(q[1])}" r="2.3" fill="var(--data)"/>`})});
+  if(o.split){g+=`<line x1="${X(o.split)}" x2="${X(o.split)}" y1="${Tp-6}" y2="${Tp+ph}" stroke="var(--muted)" stroke-dasharray="2 3"/><text class="ph" x="${X(o.split)-6}" y="${Tp-9}" text-anchor="end">Lo ocurrido</text><text class="ph" x="${X(o.split)+6}" y="${Tp-9}" text-anchor="start">Proyección</text>`}
+  g+=`<line class="xh" x1="0" x2="0" y1="${Tp}" y2="${Tp+ph}" stroke="var(--muted)" visibility="hidden"/>`;
+  host.innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.title||''}">${g}<rect class="hit" x="${L}" y="${Tp}" width="${pw}" height="${ph}" fill="transparent"/></svg>`;
+  const hit=host.querySelector('.hit'),xh=host.querySelector('.xh'),card=host.closest('.chart');
+  let tip=card.querySelector('.tip');if(!tip){tip=document.createElement('div');tip.className='tip';tip.hidden=true;card.appendChild(tip)}
+  const near=(pts,a)=>{let b=null,d=1e9;for(const q of pts){const e=Math.abs(q[0]-a);if(e<d){d=e;b=q}}return d<=(o.tol||1.1)?b:null};
+  const move=e=>{
+    const r=hit.getBoundingClientRect(),cr=card.getBoundingClientRect();
+    const a=x0+(x1-x0)*Math.min(1,Math.max(0,(e.clientX-r.left)/r.width));
+    xh.setAttribute('x1',X(a));xh.setAttribute('x2',X(a));xh.setAttribute('visibility','visible');
+    let h=`<b>${f1.format(a)}</b>`;
+    (o.series||[]).forEach(s=>{const q=near(s.pts,a);if(q)h+=`<br>${s.lab}: ${fm.format(q[1])}`});
+    (o.dots||[]).forEach(s=>{const q=near(s.pts,a);if(q&&Math.abs(q[0]-a)<0.7)h+=`<br>${s.lab}: ${fm.format(q[1])}`});
+    tip.innerHTML=h;tip.hidden=false;
+    tip.style.left=Math.min(cr.width-tip.offsetWidth-6,Math.max(6,e.clientX-cr.left+12))+'px';tip.style.top=Math.max(6,e.clientY-cr.top-tip.offsetHeight-8)+'px'};
+  hit.addEventListener('pointermove',move);hit.addEventListener('pointerdown',move);
+  hit.addEventListener('pointerleave',()=>{xh.setAttribute('visibility','hidden');tip.hidden=true});
+}
+function mkCharts(host,defs,pre){$(host).innerHTML=defs.map((d,i)=>`<div class="chart"><h3>${d.t}</h3><p class="u">${d.u}</p><div id="${pre}${i}"></div></div>`).join('')}
+const toPts=(arr,sc,m0=0,m1=840,step=1)=>{const o=[];for(let m=m0;m<=m1;m+=step)o.push([yr(m),arr[m]*(sc||1)]);return o};
+const dobj=(d,sc)=>Object.keys(d).map(Number).sort((a,b)=>a-b).map(y=>[y+0.5,d[y]*(sc||1)]);
+
+/* ---- seccion Datos ---- */
+const DC=[
+ {t:'Precio de la vivienda',u:'€ de 2010 por m² (real)',d:0,s:[{lab:'Precio',pts:dobj(DATA.precio)}]},
+ {t:'Parque de viviendas',u:'millones',d:1,s:[{lab:'Parque',pts:dobj(DATA.parque,1e-6)}]},
+ {t:'Hogares',u:'millones (EPA)',d:1,s:[{lab:'Hogares',pts:dobj(DATA.epa,1e-6)}]},
+ {t:'Tipo de interés de las hipotecas',u:'% (oficial + 1,5 hasta 2003; observado después)',d:1,s:[{lab:'Tipo',pts:dobj(DATA.tipo)}]},
+ {t:'Préstamo sobre valor',u:'% (2004-2024)',d:0,s:[{lab:'Préstamo/valor',pts:dobj(DATA.ltv)}]},
+ {t:'Deuda de los hogares',u:'crédito sobre PIB, % (BIS)',d:0,s:[{lab:'Crédito/PIB',pts:dobj(DATA.credito)}]},
+ {t:'Precio sobre renta',u:'años de renta bruta del hogar (2003-2024)',d:1,s:[{lab:'Precio/renta',pts:dobj(DATA.pyi)}]},
+ {t:'Rentabilidad bruta por alquiler',u:'% (1996-2024)',d:1,s:[{lab:'Alquiler',pts:dobj(DATA.yld)}]}
+];
+mkCharts('datacharts',DC,'dc');
+DC.forEach((c,i)=>chart($('dc'+i),{title:c.t,series:[{lab:c.s[0].lab,pts:c.s[0].pts,col:'var(--accent)',w:2.2}],dec:c.d,x0:1981,x1:2025,tol:1}));
+
+/* ---- calibracion: modelo frente a dato ---- */
+const base=simulate({},['Precio','Parque fisico','Obra terminada','Deuda indice','Credito indice','Error balance parque','Capacidad hipotecaria','Precio sobre ingreso']);
+const obraAnual=(()=>{const o=new Float64Array(841);let acc=0;for(let m=0;m<=840;m++){acc+=base['Obra terminada'][m];if(m>=12)acc-=base['Obra terminada'][m-12];o[m]=m<11?acc*12/(m+1):acc}return o})();
+const CC=[
+ {t:'Precio de la vivienda',u:'€ de 2010 por m²',d:0,m:toPts(base['Precio'],1,0,528),dat:dobj(DATA.precio)},
+ {t:'Parque de viviendas',u:'millones',d:1,m:toPts(base['Parque fisico'],1e-6,0,528),dat:dobj(DATA.parque,1e-6)},
+ {t:'Viviendas terminadas al año',u:'miles',d:0,m:toPts(obraAnual,1e-3,11,528),dat:dobj(DATA.term,1e-3),z:true},
+ {t:'Deuda hipotecaria de los hogares',u:'relativa a 1981 (modelo) frente al crédito sobre PIB del BIS',d:1,m:toPts(base['Deuda indice'],1,0,528),dat:toPts(base['Credito indice'],1,6,522,12)},
+ {t:'Capacidad de compra del modelo',u:'años de renta',d:1,m:toPts(base['Capacidad hipotecaria'],1,0,528),dat:dobj(DATA.pyi),dl:'Precio/renta observado'},
+];
+mkCharts('calcharts',CC,'cc');
+CC.forEach((c,i)=>chart($('cc'+i),{title:c.t,series:[{lab:'Modelo',pts:c.m}],dots:[{lab:c.dl||'Dato',pts:c.dat}],dec:c.d,zero:c.z,x0:1981,x1:2025,tol:1}));
+(function(){
+  const rm=(a)=>Math.sqrt(a.reduce((s,v)=>s+v*v,0)/a.length);
+  const ep=Object.keys(DATA.precio).map(y=>100*(base['Precio'][(y-1981)*12+6]/DATA.precio[y]-1));
+  const eq=Object.keys(DATA.parque).map(y=>100*(base['Parque fisico'][(y-1981)*12+6]/DATA.parque[y]-1));
+  const ed=[];for(let y=1982;y<=2024;y++)ed.push(100*(base['Deuda indice'][(y-1981)*12+6]/base['Credito indice'][(y-1981)*12+6]-1));
+  $('c-prec').textContent=f1.format(rm(ep))+' %';$('c-parq').textContent=f1.format(rm(eq))+' %';$('c-deu').textContent=f0.format(rm(ed))+' %';
+})();
+/* tabla de parametros */
+$('ptab').querySelector('tbody').innerHTML=PTAB.map(r=>`<tr><td>${r[0]}</td><td class="n ${r[4]?'lim':''}">${r[1]}</td><td>${r[2]}</td><td>${r[3]}${r[4]?' <b>(en el límite)</b>':''}</td></tr>`).join('');
+
+/* ---- mapa de condiciones (la tesis) ---- */
+const VPS=[0.005,0.01,0.02,0.05,0.1],MULT=[1.5,2,3,4];
+function heat(){
+  const vf=+$('h-vf').value,Y=+$('h-yr').value,m=(Y-1981)*12;
+  const run=(vp,mu)=>simulate({'Velocidad precio':vp,'Velocidad financiera':vf,'Politica inversion':mu},['Precio','Compra hogares']);
+  const rows1=[],rows2=[];
+  const bases=VPS.map(v=>run(v,1));
+  const avg=(a,m0,m1)=>{let s=0;for(let k=m0;k<=m1;k++)s+=a[k];return s/(m1-m0+1)};
+  MULT.forEach(mu=>{
+    const c1=[],c2=[];
+    VPS.forEach((v,j)=>{const r=run(v,mu),b=bases[j];
+      c1.push(100*(r['Precio'][m]/b['Precio'][m]-1));
+      c2.push(100*(avg(r['Compra hogares'],m-12,m)/avg(b['Compra hogares'],m-12,m)-1))});
+    rows1.push([mu,c1]);rows2.push([mu,c2]);
+  });
+  const cls=(v,thr)=>Math.abs(v)<thr?'z':(v>0?'up':'dn');
+  const fmt=(v)=>(v>0?'+':'')+f1.format(v)+' %';
+  const head=`<thead><tr><th class="rowh">Demanda de los fondos desde 2025</th>${VPS.map(v=>`<th>Respuesta del precio ${String(v).replace('.',',')}<br><span class="small">ajuste a la historia: ${PROFV[vf+'_'+v]!==undefined?f1.format(PROFV[vf+'_'+v])+' %':'—'}</span></th>`).join('')}</tr></thead>`;
+  $('heat1').innerHTML=head+'<tbody>'+rows1.map(([mu,c])=>`<tr><th class="rowh">× ${f1.format(mu)}</th>${c.map(v=>`<td class="${cls(v,0.5)}">${fmt(v)}</td>`).join('')}</tr>`).join('')+'</tbody>';
+  $('heat2').innerHTML=head+'<tbody>'+rows2.map(([mu,c])=>`<tr><th class="rowh">× ${f1.format(mu)}</th>${c.map(v=>`<td class="${cls(v,0.5)}">${fmt(v)}</td>`).join('')}</tr>`).join('')+'</tbody>';
+  const mx=Math.max(...rows1.flatMap(r=>r[1])),mn=Math.min(...rows2.flatMap(r=>r[1]));
+  $('heat-note').innerHTML=`<b>Lectura.</b> Con las condiciones ajustadas a los datos (primera columna) el precio apenas se mueve (el cambio máximo de esta tabla es ${fmt(mx)}), porque el límite que impone la financiación lo frena. Para que la tesis se cumpla en el modelo hace falta que el precio responda con fuerza a la presión de la demanda y que el límite financiero sea débil. La fila «ajuste a la historia» indica cuánto empeora el reproducir 1981-2024 si se fuerza esa respuesta y se reajusta todo lo demás. ${(PROFV[vf+'_0.1']!==undefined&&PROFV[vf+'_0.005']!==undefined)?`<b>Lo que dicen los datos:</b> si se fuerza la respuesta máxima (0,1), el modelo ya no reproduce la historia (error del precio ${f1.format(PROFV[vf+'_0.1'])} % frente a ${f1.format(PROFV[vf+'_0.005'])} % con la ajustada). Es decir, con esta estructura la historia acota cuánto puede responder el precio, y la acota hacia abajo.`:''} Compras de hogares: el cambio más negativo de esta tabla es ${fmt(mn)}.`;
+}
+$('h-vf').addEventListener('change',heat);$('h-yr').addEventListener('change',heat);heat();
+
+/* ---- simulador ---- */
+const NEUTRAL={'Politica inversion':1,'Politica riesgo':0,'Politica obra':1,'Politica rehabilitacion':1,'Politica tipos':0,'Politica credito':1,'Politica prestamo valor':0,'Politica plazo':0};
+const SPRE=[
+ {k:'nada',t:'Sin políticas nuevas',v:{}},
+ {k:'inv',t:'Frenar la compra para invertir',v:{'Politica inversion':0.5}},
+ {k:'obra',t:'Impulsar obra y rehabilitación',v:{'Politica obra':1.5,'Politica rehabilitacion':2}},
+ {k:'ltv',t:'Más préstamo sobre valor (+10 puntos)',v:{'Politica prestamo valor':0.10}},
+ {k:'cus',t:'Personalizada',v:null}];
+const SSL=[
+ ['Politica inversion','Demanda de compra para invertir',0.2,1.5,0.05,v=>'× '+f2.format(v)],
+ ['Politica obra','Inicios de obra',0.5,2,0.05,v=>'× '+f2.format(v)],
+ ['Politica rehabilitacion','Capacidad de rehabilitar',0.5,3,0.1,v=>'× '+f1.format(v)],
+ ['Politica prestamo valor','Préstamo sobre valor (puntos)',-0.1,0.2,0.01,v=>(v>=0?'+':'')+f0.format(v*100)+' pts'],
+ ['Politica tipos','Tipos de interés (puntos)',-0.02,0.03,0.0025,v=>(v>=0?'+':'')+f2.format(v*100)+' pts'],
+ ['Politica riesgo','Riesgo regulatorio añadido',0,0.04,0.0025,v=>f2.format(v*100)+' pts'],
+ ['Inicio politica','Año de inicio',528,780,12,v=>String(1981+Math.round(v/12))]];
+let sov={};
+const sval=(n)=>sov[n]!==undefined?sov[n]:DEF[n];
+$('spre').innerHTML=SPRE.map((p,i)=>`<label><input type="radio" name="spre" id="sp-${i}"> ${p.t}</label>`).join('');
+$('ssl').innerHTML=SSL.map((s,i)=>`<div class="sl"><span class="lab">${s[1]}</span><output id="sso-${i}"></output><input type="range" id="ssr-${i}" min="${s[2]}" max="${s[3]}" step="${s[4]}" aria-label="${s[1]}"></div>`).join('');
+SPRE.forEach((p,i)=>$('sp-'+i).addEventListener('change',()=>{if(p.v){sov=Object.assign({},NEUTRAL,p.v)}srun()}));
+SSL.forEach((s,i)=>$('ssr-'+i).addEventListener('input',e=>{sov[s[0]]=+e.target.value;$('sp-4').checked=true;srun()}));
+const SCH=[
+ {id:'Precio',t:'Precio de la vivienda',u:'€ de 2010 por m²',d:0,data:'precio'},
+ {id:'Parque fisico',t:'Parque de viviendas',u:'millones',d:1,sc:1e-6,data:'parque'},
+ {id:'Obra anual',t:'Viviendas terminadas al año',u:'miles',d:0,sc:1e-3,data:'term',z:true},
+ {id:'Hogares sin alojar',t:'Hogares sin alojar',u:'miles (negativo = sobran viviendas)',d:0,sc:1e-3,z:true},
+ {id:'Capacidad hipotecaria',t:'Capacidad de compra',u:'años de renta',d:1},
+ {id:'Peso inversor',t:'Peso de las compras inversoras',u:'% de las compras',d:1,z:true}];
+mkCharts('scharts',SCH,'sc');
+const SW=['Precio','Parque fisico','Obra terminada','Hogares sin alojar','Capacidad hipotecaria','Precio sobre ingreso','Compra inversora','Compra hogares'];
+function sder(r){
+  const o={};for(const k of ['Precio','Parque fisico','Hogares sin alojar','Capacidad hipotecaria','Precio sobre ingreso'])o[k]=r[k];
+  const oa=new Float64Array(841);let acc=0;for(let m=0;m<=840;m++){acc+=r['Obra terminada'][m];if(m>=12)acc-=r['Obra terminada'][m-12];oa[m]=m<11?acc*12/(m+1):acc}o['Obra anual']=oa;
+  const pi=new Float64Array(841);for(let m=0;m<=840;m++){const t=r['Compra inversora'][m]+r['Compra hogares'][m];pi[m]=t>0?100*r['Compra inversora'][m]/t:0}o['Peso inversor']=pi;return o}
+function srun(){
+  SPRE.forEach((p,i)=>{if(p.v){const same=Object.keys(NEUTRAL).every(k=>Math.abs(sval(k)-((p.v[k]!==undefined)?p.v[k]:NEUTRAL[k]))<1e-9);if(same)$('sp-'+i).checked=true}});
+  if(!SPRE.slice(0,4).some((p,i)=>$('sp-'+i).checked))$('sp-4').checked=true;
+  SSL.forEach((s,i)=>{$('ssr-'+i).value=sval(s[0]);$('sso-'+i).textContent=s[5](sval(s[0]))});
+  const pol=sder(simulate(sov,SW)),bas=sder(simulate(Object.assign({},sov,NEUTRAL),SW));
+  SCH.forEach((c,i)=>{const sc=c.sc||1,tp=(a,m0,m1)=>{const o=[];for(let m=m0;m<=m1;m++)o.push([yr(m),a[m]*sc]);return o};
+    const ser=[{lab:'Modelo (ocurrido)',pts:tp(pol[c.id],0,528),col:'var(--accent)'},{lab:'Con políticas',pts:tp(pol[c.id],528,840),col:'var(--accent)'},{lab:'Sin políticas',pts:tp(bas[c.id],528,840),col:'var(--ref)',dash:true,w:1.9}];
+    const dt=c.data?[{lab:'Dato',pts:dobj(DATA[c.data],sc)}]:[];
+    chart($('sc'+i),{title:c.t,series:ser,dots:dt,dec:c.d,zero:c.z,x0:1981,x1:2051,split:2025,tol:1.1})});
+  const E=840,d=(a,b)=>{const x=a-b;return (x>=0?'+':'')+f0.format(x)};
+  $('skpi').innerHTML=[
+   ['Precio en 2050',f0.format(pol['Precio'][E])+' €/m²','Sin políticas: '+f0.format(bas['Precio'][E])],
+   ['Hogares sin alojar en 2050',f0.format(pol['Hogares sin alojar'][E]/1000)+' mil','Diferencia: '+d(pol['Hogares sin alojar'][E],bas['Hogares sin alojar'][E])+' hogares (negativo = más viviendas que hogares)'],
+   ['Capacidad de compra en 2050',f1.format(pol['Capacidad hipotecaria'][E])+' años','Sin políticas: '+f1.format(bas['Capacidad hipotecaria'][E])],
+   ['Peso inversor en 2050',f1.format(pol['Peso inversor'][E])+' %','Sin políticas: '+f1.format(bas['Peso inversor'][E])+' %']
+  ].map(x=>`<div class="kpi"><p class="k">${x[0]}</p><p class="v">${x[1]}</p><p class="d">${x[2]}</p></div>`).join('');
+}
+srun();
+</script>
+
+</body>
+</html>

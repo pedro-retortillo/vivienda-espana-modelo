@@ -135,7 +135,43 @@ def hogares():
     d.text(490, 232, "Los hogares siguen a los datos con un retraso de dos años; en la demanda actúan como escala (más hogares, más compras deseadas)", "tx s")
     return d.svg()
 
+def costes():
+    d = D(1040, 630, "Diagrama causal de la composición del precio: costes de construcción y precio de coste")
+    # entradas (datos y supuestos)
+    d.aux(130, 50, "Índice real de materiales (INE)"); d.aux(130, 170, "Índice real de mano de obra (INE)")
+    d.aux(130, 250, "Escalones normativos (CTE, DB-HE)"); d.aux(130, 320, "Sobrecoste por escalón (supuesto)", "ax ax3")
+    # componentes
+    d.aux(400, 50, "Materiales"); d.aux(400, 110, "Energía y transporte"); d.aux(400, 170, "Mano de obra")
+    d.aux(400, 240, "Calidad y otros (fijo)"); d.aux(400, 320, "Normativa")
+    d.link(235, 50, 355, 50, "+"); d.link(190, 62, 350, 106, "+"); d.link(235, 170, 355, 170, "+")
+    d.link(235, 250, 358, 312, "+"); d.link(235, 320, 355, 320, "+")
+    # coste de construccion
+    d.aux(650, 190, "COSTE DE CONSTRUCCIÓN (€/m²)", "ax pr")
+    for y, e, s_ in ((50, 178, "+"), (110, 182, "+"), (170, 190, "+"), (240, 198, "+"), (320, 204, "+")):
+        d.link(465, y + (4 if y < 190 else -4), 538, e, s_, 0)
+    d.aux(650, 70, "Política de costes (multiplicador)"); d.link(650, 82, 650, 176, "×")
+    # precio de coste
+    d.aux(890, 70, "Margen mínimo del promotor"); d.aux(890, 350, "Suelo: fracción del precio", "ax ax3")
+    d.aux(890, 190, "PRECIO DE COSTE", "ax pr")
+    d.link(765, 190, 828, 190, "+"); d.link(890, 82, 890, 176, "+"); d.link(890, 338, 890, 204, "+")
+    d.text(904, 226, "(coste + margen)", "tx s", "start"); d.text(904, 241, "/ (1 − suelo)", "tx s", "start")
+    # precio y suelo de coste
+    d.aux(660, 455, "Brecha coste"); d.aux(890, 500, "PRECIO", "ax pr")
+    d.link(840, 204, 700, 442, "−", 0, -14, 6)            # precio de coste -> brecha
+    d.link(850, 492, 705, 462, "+")                          # precio -> brecha
+    d.link(695, 468, 850, 508, "−", -26, 8, 16)              # brecha -> precio (empuja hacia arriba si cae bajo coste)
+    d.link(890, 488, 890, 364, "+", 0, 14, 0)                # precio -> suelo
+    # margen de obra y oferta
+    d.aux(330, 470, "Margen de obra"); d.aux(330, 540, "Inicios de obra"); d.aux(580, 575, "Oferta en venta"); d.aux(830, 590, "Presión de la demanda")
+    d.link(600, 202, 360, 458, "−", 30, -8, 0)               # coste construccion -> margen
+    d.link(840, 505, 395, 474, "+", -100, 6, 14)             # precio -> margen
+    d.link(330, 484, 330, 527, "+"); d.link(395, 543, 530, 569, "+"); d.link(640, 577, 765, 588, "−")
+    d.link(850, 578, 890, 514, "+")
+    d.loop(770, 330, "B: suelo de coste"); d.loop(445, 610, "B: obra nueva"); d.loop(975, 430, "B: suelo y precio")
+    d.text(520, 18, "El coste entra por dos vías: abarata o encarece la obra nueva (margen) y fija el precio mínimo al que se construye (precio de coste)", "tx s")
+    return d.svg()
+
 if __name__ == "__main__":
     import sys
-    open(sys.argv[1], "w", encoding="utf-8").write("\n<!--SEP-->\n".join([parque(), demanda_precio(), financiacion(), hogares()]))
+    open(sys.argv[1], "w", encoding="utf-8").write("\n<!--SEP-->\n".join([parque(), demanda_precio(), financiacion(), hogares(), costes()]))
     print("diagramas generados")

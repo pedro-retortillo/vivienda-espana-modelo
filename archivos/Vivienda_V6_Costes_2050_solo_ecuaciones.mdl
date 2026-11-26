@@ -1,0 +1,1197 @@
+{UTF-8}
+Viviendas venta=
+	INTEG(Obra a venta+Reventa propietarios+Venta inversor+Rehabilitacion+Secundarias a venta-Compra hogares-Compra inversora-Deterioro venta, 270000.0)
+	~	Vivienda
+	~	Vs: vacias en venta.
+	|
+
+Uso propio=
+	INTEG(Compra hogares-Reventa propietarios-Deterioro uso propio, 8041176.0)
+	~	Vivienda
+	~	O: principales en propiedad o cedidas (73,1 % + 6,1 % del censo de 1981).
+	|
+
+Vacias inversor=
+	INTEG(Compra inversora+Fin de contrato-Puesta en alquiler-Venta inversor-Deterioro vacias inversor, 2258287.5)
+	~	Vivienda
+	~	Vi: vacias retenidas fuera del mercado (desocupadas del censo).
+	|
+
+Alquiladas=
+	INTEG(Puesta en alquiler-Fin de contrato-Deterioro alquiladas, 2111824.0)
+	~	Vivienda
+	~	R: principales en alquiler (20,8 % del censo de 1981).
+	|
+
+Secundarias=
+	INTEG(Obra a secundarias-Secundarias a venta-Deterioro secundarias, 1898602.0)
+	~	Vivienda
+	~	Segundas residencias (censo 1981: 1.898.602).
+	|
+
+Deterioradas=
+	INTEG(Deterioro venta+Deterioro uso propio+Deterioro vacias inversor+Deterioro alquiladas+Deterioro secundarias-Rehabilitacion-Demolicion, 280382.5)
+	~	Vivienda
+	~	No habitables o pendientes de recuperar.
+	|
+
+Parque retirado=
+	INTEG(Demolicion, 0)
+	~	Vivienda
+	~	Demolidas (acumulado).
+	|
+
+En construccion=
+	INTEG(Inicio obra-Obra a venta-Obra a secundarias, 474122.5)
+	~	Vivienda
+	~	U: en obra.
+	|
+
+Edad media=
+	INTEG(Envejecimiento-Rejuvenecimiento, 360)
+	~	Month
+	~	Antiguedad media del parque (30 anos en 1981, supuesto).
+	|
+
+Obra terminada=
+	En construccion/tau obra
+	~	Vivienda/Month
+	~	C: viviendas terminadas.
+	|
+
+Obra a venta=
+	(1-fraccion secundaria)*Obra terminada
+	~	Vivienda/Month
+	~	Terminadas que salen a la venta.
+	|
+
+Obra a secundarias=
+	fraccion secundaria*Obra terminada
+	~	Vivienda/Month
+	~	Terminadas que son segunda residencia.
+	|
+
+Reventa propietarios=
+	Uso propio/tau uso propio
+	~	Vivienda/Month
+	~	E_h.
+	|
+
+Venta inversor=
+	Vacias inversor/tau vacia inversor
+	~	Vivienda/Month
+	~	E_i.
+	|
+
+Puesta en alquiler=
+	fraccion alquiler*Vacias inversor/tau alquilar
+	~	Vivienda/Month
+	~	L_i.
+	|
+
+Fin de contrato=
+	Alquiladas/tau contrato
+	~	Vivienda/Month
+	~	F_R.
+	|
+
+Secundarias a venta=
+	Secundarias/tau secundaria
+	~	Vivienda/Month
+	~	Segundas residencias que se ponen a la venta.
+	|
+
+Inicio obra=
+	Inicio base*Politica obra efectiva*MAX(0, 1+Sensibilidad margen*Margen obra/Margen ref)*Factor inventario*Credito indice^Elasticidad credito obra
+	~	Vivienda/Month
+	~	I_nuevo: margen x inventario x credito x politica.
+	|
+
+Compra hogares=
+	Reparto*Demanda hogares
+	~	Vivienda/Month
+	~	B_h.
+	|
+
+Compra inversora=
+	Reparto*Demanda inversora
+	~	Vivienda/Month
+	~	A_i.
+	|
+
+Tasa deterioro=
+	(1/tau deterioro)*(Edad media/Edad ref)^Exponente edad
+	~	1/Month
+	~	Deterioro por mes; crece con la edad.
+	|
+
+Deterioro venta=
+	Tasa deterioro*Viviendas venta
+	~	Vivienda/Month
+	~	
+	|
+
+Deterioro uso propio=
+	Tasa deterioro*Uso propio
+	~	Vivienda/Month
+	~	
+	|
+
+Deterioro vacias inversor=
+	Tasa deterioro*Vacias inversor
+	~	Vivienda/Month
+	~	
+	|
+
+Deterioro alquiladas=
+	Tasa deterioro*Alquiladas
+	~	Vivienda/Month
+	~	
+	|
+
+Deterioro secundarias=
+	Tasa deterioro*Secundarias
+	~	Vivienda/Month
+	~	
+	|
+
+Rehabilitacion=
+	MIN(Deterioradas/tau rehabilitacion, Capacidad rehabilitacion efectiva)
+	~	Vivienda/Month
+	~	H: vuelve a venta.
+	|
+
+Demolicion=
+	Deterioradas/tau demolicion
+	~	Vivienda/Month
+	~	Da.
+	|
+
+Envejecimiento=
+	1
+	~	Month/Month
+	~	
+	|
+
+Rejuvenecimiento=
+	Edad media*Obra terminada/Parque fisico
+	~	Month/Month
+	~	
+	|
+
+Precio=
+	INTEG(Cambio precio, Precio ref)
+	~	Euro/Metro2
+	~	P endogeno (euros de 2010).
+	|
+
+Expectativa ge=
+	INTEG(Cambio expectativa, 0)
+	~	1/Year
+	~	g_e.
+	|
+
+Precio efectivo=
+	IF THEN ELSE(Interruptor precio forzado=1, Precio dato, Precio)
+	~	Euro/Metro2
+	~	Precio usado por el resto: el dato si esta forzado.
+	|
+
+Oferta venta=
+	Viviendas venta/tau venta
+	~	Vivienda/Month
+	~	Q_s.
+	|
+
+Reparto=
+	MIN(1, Oferta venta/(Demanda hogares+Demanda inversora+Eps demanda))
+	~	Dmnl
+	~	lambda.
+	|
+
+Demanda hogares=
+	Demanda base hogares*(Hogares/Hogares ref)^Elasticidad hogares*Factor acceso*Factor empleo*Factor expectativa hogares
+	~	Vivienda/Month
+	~	D_h*.
+	|
+
+Expectativa usada=
+	IF THEN ELSE(Interruptor expectativa=1, Expectativa ge, Expectativa externa)
+	~	1/Year
+	~	
+	|
+
+Rentabilidad inversora=
+	12*Renta alquiler efectiva/Precio efectivo+Expectativa usada-Tipo capital-Coste mantenimiento-Riesgo regulacion efectivo
+	~	1/Year
+	~	r_i.
+	|
+
+Demanda inversora=
+	Multiplicador inversor efectivo*Demanda base inversora*MAX(0, 1+Sensibilidad inversora*(Rentabilidad inversora-Rentabilidad ref))
+	~	Vivienda/Month
+	~	D_i*.
+	|
+
+Presion=
+	(Demanda hogares+Demanda inversora)/(Oferta venta+Eps oferta)
+	~	Dmnl
+	~	
+	|
+
+Cambio bruto precio=
+	Velocidad precio*Precio*MIN(Presion-1, Techo desequilibrio)-Velocidad financiera*Precio*Brecha financiera-Velocidad coste*Precio*MIN(0, Brecha coste)
+	~	Euro/Metro2/Month
+	~	
+	|
+
+Cambio precio=
+	IF THEN ELSE(Precio>Precio minimo, Cambio bruto precio, MAX(0, Cambio bruto precio))
+	~	Euro/Metro2/Month
+	~	
+	|
+
+Cambio precio efectivo=
+	IF THEN ELSE(Interruptor precio forzado=1, Crecimiento precio dato*Precio dato/12, Cambio precio)
+	~	Euro/Metro2/Month
+	~	Variacion del precio usada para las expectativas.
+	|
+
+Cambio expectativa=
+	(12*Cambio precio efectivo/Precio efectivo-Expectativa ge)/tau expectativa
+	~	1/Year/Month
+	~	
+	|
+
+Precio minimo=
+	0.3*Precio ref
+	~	Euro/Metro2
+	~	
+	|
+
+Coste suelo=
+	Fraccion suelo*Precio efectivo
+	~	Euro/Metro2
+	~	El suelo cuesta una fraccion del precio.
+	|
+
+Coste obra=
+	Coste suelo+Coste construccion
+	~	Euro/Metro2
+	~	
+	|
+
+Margen obra=
+	Precio efectivo-Coste obra-Margen minimo
+	~	Euro/Metro2
+	~	
+	|
+
+Hogares=
+	INTEG(Formacion hogares-Disolucion hogares, 10153000.0)
+	~	Hogar
+	~	H.
+	|
+
+Hogares objetivo=
+	Hogares dato*(1+Crecimiento hogares futuro)^(MAX(0,Time-522)/12)
+	~	Hogar
+	~	H* = EPA hasta 2024; despues crece al ritmo de la proyeccion.
+	|
+
+Formacion hogares=
+	MAX(0, (Hogares objetivo-Hogares)/tau formacion)
+	~	Hogar/Month
+	~	
+	|
+
+Disolucion hogares=
+	MAX(0, (Hogares-Hogares objetivo)/tau disolucion)
+	~	Hogar/Month
+	~	
+	|
+
+Parque habitable=
+	Viviendas venta+Uso propio+Vacias inversor+Alquiladas+Secundarias
+	~	Vivienda
+	~	
+	|
+
+Parque fisico=
+	Parque habitable+Deterioradas
+	~	Vivienda
+	~	N.
+	|
+
+Obras acumuladas=
+	INTEG(Obra terminada, 0)
+	~	Vivienda
+	~	
+	|
+
+Error balance parque=
+	Parque fisico-(14860272.0+Obras acumuladas-Parque retirado)
+	~	Vivienda
+	~	Debe valer 0.
+	|
+
+Vacancia=
+	(Viviendas venta+Vacias inversor)/Parque habitable
+	~	Dmnl
+	~	
+	|
+
+Indice precio=
+	100*Precio efectivo/Precio ref
+	~	Dmnl
+	~	
+	|
+
+Precio sobre ingreso=
+	Precio efectivo*Superficie tipo/(12*Ingreso)
+	~	Year
+	~	
+	|
+
+Alquiler sobre ingreso=
+	Renta alquiler efectiva*Superficie tipo/Ingreso
+	~	Dmnl
+	~	
+	|
+
+Disponibles por mil hogares=
+	1000*Viviendas venta/Hogares
+	~	Vivienda/Hogar
+	~	
+	|
+
+Hogares sin alojar=
+	Hogares-(Uso propio+Alquiladas)
+	~	Hogar
+	~	
+	|
+
+Desviacion parque=
+	(Parque fisico-Parque dato)/Parque dato
+	~	Dmnl
+	~	Frente a la estimacion oficial.
+	|
+
+Desviacion precio=
+	(Precio efectivo-Precio dato)/Precio dato
+	~	Dmnl
+	~	Frente al indice real del BIS anclado.
+	|
+
+Hogares dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,29392801)],(6,10153000.0),(54,10721000.0),(66,11088000.0),(78,11217000.0),(90,11361000.0),(102,11595000.0),(114,11740000.0),(126,11834000.0),(138,12040000.0),(150,12155000.0),(162,12350000.0),(174,12415000.0),(186,12374000.0),(198,12560000.0),(210,12813000.0),(222,13100000.0),(234,13382000.0),(246,13776000.0),(258,14669200.0),(270,15082800.0),(282,15489800.0),(294,15922700.0),(306,16350400.0),(318,16824600.0),(330,17211600.0),(342,17490800.0),(354,17746500.0),(366,17995800.0),(378,18154100.0),(390,18245100.0),(402,18362000.0),(414,18395100.0),(426,18486400.0),(438,18529700.0),(450,18625000.0),(462,18746900.0),(474,18817800.0),(486,18990000.0),(498,19200700.0),(510,19487500.0),(522,19595200.0)))
+	~	Hogar
+	~	Hogares de la EPA (INE); 1982-84 interpolados.
+	|
+
+Ingreso indice dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,4)],(6,1.0),(18,1.006404),(30,1.019241),(42,1.033132),(54,1.053292),(66,1.084314),(78,1.141498),(90,1.197109),(102,1.252928),(114,1.298982),(126,1.328668),(138,1.334463),(150,1.313867),(162,1.33879),(174,1.369649),(186,1.39952),(198,1.443661),(210,1.499549),(222,1.559329),(234,1.633105),(246,1.68537),(258,1.707518),(270,1.726205),(282,1.749519),(294,1.7813),(306,1.822262),(318,1.852049),(330,1.836721),(342,1.751924),(354,1.745518),(366,1.728196),(378,1.677592),(390,1.659639),(402,1.690076),(414,1.760164),(426,1.810078),(438,1.857976),(450,1.89391),(462,1.917263),(474,1.698827),(486,1.809138),(498,1.910601),(510,1.934686),(522,1.981199)))
+	~	Dmnl
+	~	PIB per capita real / 1981 (proxy de la renta).
+	|
+
+Tipo capital dato=
+	WITH LOOKUP(Time, ([(0,-1)-(528,2)],(6,0.035966),(18,0.049602),(30,0.105084),(42,0.049385),(54,0.049408),(66,0.043249),(78,0.121374),(90,0.078648),(102,0.086919),(114,0.093781),(126,0.0867),(138,0.084212),(150,0.080763),(162,0.044691),(174,0.056595),(186,0.054203),(198,0.048831),(210,0.038115),(222,0.01898),(234,0.02129),(246,0.021393),(258,0.016429),(270,0.007109),(282,0.004605),(294,0.001525),(306,0.007759),(318,0.025676),(330,0.012785),(342,0.030171),(354,0.007002),(366,-0.004461),(378,-0.00071),(390,0.00633),(402,0.018093),(414,0.020503),(426,0.017111),(438,-0.004558),(450,-0.001754),(462,0.008007),(474,0.018226),(486,-0.01593),(498,-0.062238),(510,0.018425),(522,0.027468)))
+	~	1/Year
+	~	Tipo oficial + 1,5 puntos - inflacion (real).
+	|
+
+Credito indice dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,6)],(6,1.0),(18,1.035294),(30,1.027451),(42,0.929412),(54,0.929412),(66,0.945098),(78,1.043137),(90,1.14902),(102,1.235294),(114,1.215686),(126,1.231373),(138,1.231373),(150,1.247059),(162,1.231373),(174,1.235294),(186,1.266667),(198,1.352941),(210,1.494118),(222,1.658824),(234,1.788235),(246,1.854902),(258,2.007843),(270,2.223529),(282,2.490196),(294,2.780392),(306,3.066667),(318,3.211765),(330,3.247059),(342,3.333333),(354,3.305882),(366,3.231373),(378,3.192157),(390,3.043137),(402,2.866667),(414,2.65098),(426,2.513725),(438,2.388235),(450,2.298039),(462,2.215686),(474,2.435294),(486,2.243137),(498,2.015686),(510,1.807843),(522,1.713725)))
+	~	Dmnl
+	~	Credito a hogares / PIB, base 1981.
+	|
+
+Precio dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,3385)],(6,575.405173),(18,519.15997),(30,552.216277),(42,533.930189),(54,539.818774),(66,571.763307),(78,748.654493),(90,892.787712),(102,1030.70456),(114,1117.255359),(126,1205.325855),(138,1123.285389),(150,1069.772552),(162,1028.754733),(174,1016.731361),(186,1000.153726),(198,996.35738),(210,1023.808959),(222,1104.530552),(234,1159.517708),(246,1229.532871),(258,1380.542381),(270,1575.685379),(282,1796.031307),(294,1979.367205),(306,2111.070095),(318,2255.922611),(330,2136.891427),(342,2001.267642),(354,1931.261168),(366,1728.737405),(378,1438.451623),(390,1288.309615),(402,1294.19482),(414,1347.28863),(426,1412.53712),(438,1471.167108),(450,1544.176287),(462,1612.959472),(474,1654.396802),(486,1663.773255),(498,1648.790626),(510,1656.355318),(522,1748.534017)))
+	~	Euro/Metro2
+	~	Indice real BIS x 19,31 (euros de 2010).
+	|
+
+Crecimiento precio dato=
+	WITH LOOKUP(Time, ([(0,-1)-(528,2)],(6,-0.102862),(18,-0.020567),(30,0.014027),(42,-0.011353),(54,0.03423),(66,0.163522),(78,0.222812),(90,0.15986),(102,0.112141),(114,0.078254),(126,0.002691),(138,-0.059652),(150,-0.043954),(162,-0.025427),(174,-0.014098),(186,-0.010121),(198,0.011688),(210,0.051535),(222,0.062237),(234,0.053607),(246,0.087236),(258,0.124028),(270,0.131551),(282,0.114043),(294,0.080808),(306,0.065391),(318,0.006079),(330,-0.059889),(342,-0.050589),(354,-0.073195),(366,-0.147303),(378,-0.14703),(390,-0.052839),(402,0.022382),(414,0.043749),(426,0.043981),(438,0.044552),(450,0.046007),(462,0.034473),(474,0.015509),(486,-0.001697),(498,-0.002234),(510,0.029368),(522,0.054158)))
+	~	1/Year
+	~	Variacion anual del precio dato (continua).
+	|
+
+Parque dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,40353666)],(6,14860272.0),(54,15808517.0),(66,15996196.0),(78,16188471.0),(90,16386778.0),(102,16660932.0),(114,16981114.0),(126,17336208.0),(138,17596571.0),(150,17827188.0),(162,18110360.0),(174,18351515.0),(186,18683320.0),(198,19057893.0),(210,19401745.0),(222,19836527.0),(234,20585624.0),(246,21033759.0),(258,21487307.0),(270,21926409.0),(282,22417950.0),(294,22927382.0),(306,23493772.0),(318,24034966.0),(330,24569715.0),(342,24908126.0),(354,25106251.0),(366,25249053.0),(378,25625078.0),(390,25620669.0),(402,25763853.0),(414,25906114.0),(426,26033976.0),(438,26170704.0),(450,26314435.0),(462,26463070.0),(474,26623708.0),(486,26719905.0),(498,26811833.0),(510,26902443.0)))
+	~	Vivienda
+	~	Parque total oficial (BdE hasta 2000, MIVAU desde 2001).
+	|
+
+Ingreso=
+	Ingreso ref*Ingreso indice
+	~	Euro/Month
+	~	Ingreso real por hogar (euros de 2010).
+	|
+
+tau uso propio=
+	600.0
+	~	Month
+	~	Permanencia media del propietario. A CALIBRAR.
+	|
+
+tau vacia inversor=
+	1147.79520115
+	~	Month
+	~	Se calcula para el equilibrio de 1981.
+	|
+
+tau alquilar=
+	39.48384118
+	~	Month
+	~	Se calcula para el equilibrio de 1981.
+	|
+
+fraccion alquiler=
+	0.8
+	~	Dmnl
+	~	
+	|
+
+tau contrato=
+	48.0
+	~	Month
+	~	
+	|
+
+tau venta=
+	6.0
+	~	Month
+	~	
+	|
+
+tau obra=
+	10.94620727
+	~	Month
+	~	A CALIBRAR.
+	|
+
+tau secundaria=
+	480.0
+	~	Month
+	~	Salida de segundas residencias a venta.
+	|
+
+fraccion secundaria=
+	0.28031182
+	~	Dmnl
+	~	Parte de la obra que son segundas residencias; se calcula para 1981.
+	|
+
+tau deterioro=
+	2400.0
+	~	Month
+	~	A CALIBRAR.
+	|
+
+Edad ref=
+	360
+	~	Month
+	~	
+	|
+
+Exponente edad=
+	1.0
+	~	Dmnl
+	~	A CALIBRAR.
+	|
+
+tau rehabilitacion=
+	24.0
+	~	Month
+	~	
+	|
+
+Capacidad rehabilitacion=
+	40000.0
+	~	Vivienda/Month
+	~	A CALIBRAR.
+	|
+
+tau demolicion=
+	1500.0
+	~	Month
+	~	A CALIBRAR.
+	|
+
+Demanda base hogares=
+	39390.74001572
+	~	Vivienda/Month
+	~	Se calcula para el equilibrio de 1981.
+	|
+
+Demanda base inversora=
+	5609.25998428
+	~	Vivienda/Month
+	~	Se calcula para el equilibrio de 1981.
+	|
+
+Elasticidad hogares=
+	0.4822536
+	~	Dmnl
+	~	A CALIBRAR.
+	|
+
+Velocidad precio=
+	0.00500366
+	~	1/Month
+	~	A CALIBRAR.
+	|
+
+Techo desequilibrio=
+	0.3000005
+	~	Dmnl
+	~	
+	|
+
+Eps oferta=
+	1.0
+	~	Vivienda/Month
+	~	
+	|
+
+Eps demanda=
+	1.0
+	~	Vivienda/Month
+	~	
+	|
+
+Coste mantenimiento=
+	0.005
+	~	1/Year
+	~	
+	|
+
+Riesgo regulacion=
+	0.005
+	~	1/Year
+	~	
+	|
+
+Rentabilidad ref=
+	0.01743359
+	~	1/Year
+	~	Rentabilidad de 1981 (base de la demanda inversora).
+	|
+
+Sensibilidad inversora=
+	0.00034089
+	~	Year
+	~	A CALIBRAR.
+	|
+
+Fraccion suelo=
+	0.51805498
+	~	Dmnl
+	~	A CALIBRAR.
+	|
+
+Coste materiales=
+	161.1134*Indice materiales
+	~	Euro/Metro2
+	~	Materiales: 28 % del precio de 1981 x indice real de materiales (INE).
+	|
+
+Coste mano obra=
+	126.5891*Indice mano obra
+	~	Euro/Metro2
+	~	Mano de obra: 22 % del precio de 1981 x indice real de mano de obra (INE).
+	|
+
+Coste energia transporte=
+	11.5081*Indice materiales
+	~	Euro/Metro2
+	~	Energia y transporte: 2 % del precio de 1981 x indice de materiales (la energia esta en el).
+	|
+
+Coste calidad=
+	17.26215519
+	~	Euro/Metro2
+	~	
+	|
+
+Coste otros=
+	28.77025865
+	~	Euro/Metro2
+	~	
+	|
+
+Margen minimo=
+	28.77025865
+	~	Euro/Metro2
+	~	
+	|
+
+Inicio base=
+	19755.10416667
+	~	Vivienda/Month
+	~	Obra de 1981 (aumento del parque 1981-85).
+	|
+
+Sensibilidad margen=
+	1.41204953
+	~	Dmnl
+	~	A CALIBRAR.
+	|
+
+Margen ref=
+	287.7025865
+	~	Euro/Metro2
+	~	
+	|
+
+Hogares ref=
+	10153000.0
+	~	Hogar
+	~	H0 de 1981 (EPA).
+	|
+
+Ingreso ref=
+	892.295322
+	~	Euro/Month
+	~	Ingreso por hogar de 1981 que da el precio/renta de 2004 observado (7,67 anos).
+	|
+
+Precio ref=
+	575.405173
+	~	Euro/Metro2
+	~	Precio de 1981 (BIS real x 19,31).
+	|
+
+tau expectativa=
+	59.99668734
+	~	Month
+	~	A CALIBRAR.
+	|
+
+Expectativa externa=
+	0.0
+	~	1/Year
+	~	
+	|
+
+Interruptor expectativa=
+	1.0
+	~	Dmnl
+	~	1 = expectativa endogena.
+	|
+
+Interruptor precio forzado=
+	0.0
+	~	Dmnl
+	~	1 = usar el precio real como dato (para ajustar la oferta).
+	|
+
+Multiplicador inversor=
+	1.0
+	~	Dmnl
+	~	
+	|
+
+tau formacion=
+	24.0
+	~	Month
+	~	
+	|
+
+tau disolucion=
+	24.0
+	~	Month
+	~	
+	|
+
+Superficie tipo=
+	80.0
+	~	Metro2
+	~	
+	|
+
+Factor inventario=
+	MIN(Tope factor inventario, (Disponibles ref/(Disponibles por mil hogares+0.001))^Exponente inventario)
+	~	Dmnl
+	~	La obra se frena si hay mas vivienda sin vender por hogar que en 1981.
+	|
+
+Exponente inventario=
+	1.28844442
+	~	Dmnl
+	~	A CALIBRAR (0 = sin efecto).
+	|
+
+Tope factor inventario=
+	2.0
+	~	Dmnl
+	~	
+	|
+
+Disponibles ref=
+	26.593125
+	~	Vivienda/Hogar
+	~	Vacias en venta por mil hogares en 1981.
+	|
+
+Elasticidad credito obra=
+	5.6e-07
+	~	Dmnl
+	~	A CALIBRAR (0 = sin efecto).
+	|
+
+Ingreso indice=
+	Ingreso indice dato*(1+Crecimiento ingreso futuro)^(MAX(0,Time-522)/12)
+	~	Dmnl
+	~	Renta real relativa a 1981; despues crece al ritmo de la proyeccion.
+	|
+
+Tipo capital=
+	Tipo capital dato+IF THEN ELSE(Time>=Inicio politica, Politica tipos, 0)
+	~	1/Year
+	~	Tipo real; la politica puede sumarle puntos.
+	|
+
+Credito indice=
+	Credito indice dato*IF THEN ELSE(Time>=Inicio politica, Politica credito, 1)
+	~	Dmnl
+	~	Credito a hogares relativo a 1981 x politica.
+	|
+
+Multiplicador inversor efectivo=
+	Multiplicador inversor*IF THEN ELSE(Time>=Inicio politica, Politica inversion, 1)
+	~	Dmnl
+	~	m_inv x politica.
+	|
+
+Riesgo regulacion efectivo=
+	Riesgo regulacion+IF THEN ELSE(Time>=Inicio politica, Politica riesgo, 0)
+	~	1/Year
+	~	rho_pol + politica.
+	|
+
+Politica obra efectiva=
+	IF THEN ELSE(Time>=Inicio politica, Politica obra, 1)
+	~	Dmnl
+	~	
+	|
+
+Capacidad rehabilitacion efectiva=
+	Capacidad rehabilitacion*IF THEN ELSE(Time>=Inicio politica, Politica rehabilitacion, 1)
+	~	Vivienda/Month
+	~	
+	|
+
+Inicio politica=
+	528.0
+	~	Month
+	~	Mes (desde enero de 1981) en que empiezan las politicas: 528 = enero de 2025, justo despues del ultimo dato.
+	|
+
+Politica inversion=
+	1.0
+	~	Dmnl
+	~	Multiplicador de la demanda inversora desde el inicio de la politica (1 = sin politica; 0,5 = recorte a la mitad).
+	|
+
+Politica riesgo=
+	0.0
+	~	1/Year
+	~	Puntos de riesgo regulatorio que se suman a la rentabilidad exigida.
+	|
+
+Politica obra=
+	1.0
+	~	Dmnl
+	~	Multiplicador de los inicios de obra (impulso de la oferta).
+	|
+
+Politica rehabilitacion=
+	1.0
+	~	Dmnl
+	~	Multiplicador de la capacidad de rehabilitar.
+	|
+
+Politica tipos=
+	0.0
+	~	1/Year
+	~	Puntos que se suman al tipo de interes real.
+	|
+
+Politica credito=
+	1.0
+	~	Dmnl
+	~	Multiplicador del credito a hogares.
+	|
+
+Crecimiento ingreso futuro=
+	0.01
+	~	1/Year
+	~	Crecimiento real anual de la renta tras 2024. SUPUESTO.
+	|
+
+Crecimiento hogares futuro=
+	0.007
+	~	1/Year
+	~	Crecimiento anual de los hogares tras 2024 (INE: +11,1 % en 15 anos, escenario central).
+	|
+
+Tipo nominal dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,2)],(6,0.18146),(18,0.193752),(30,0.226825),(42,0.162188),(54,0.137552),(66,0.131198),(78,0.173854),(90,0.127021),(102,0.154833),(114,0.160999),(126,0.146042),(138,0.143458),(150,0.126454),(162,0.091875),(174,0.103333),(186,0.089792),(198,0.068542),(210,0.056458),(222,0.042083),(234,0.055625),(246,0.057292),(258,0.047083),(270,0.0375),(282,0.034),(294,0.035),(306,0.047),(318,0.055),(330,0.058),(342,0.026),(354,0.027),(366,0.037),(378,0.029),(390,0.032),(402,0.026),(414,0.023),(426,0.022),(438,0.021),(450,0.022),(462,0.019),(474,0.017),(486,0.015),(498,0.031),(510,0.04),(522,0.03)))
+	~	1/Year
+	~	Tipo hipotecario: oficial + 1,5 pts hasta 2003; observado en las hipotecas nuevas desde 2004 (Banco de España).
+	|
+
+Tipo nominal=
+	Tipo nominal dato+IF THEN ELSE(Time>=Inicio politica, Politica tipos, 0)
+	~	1/Year
+	~	Tipo hipotecario nominal; la politica puede sumarle puntos.
+	|
+
+Paro dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,2)],(6,0.1417),(18,0.16017),(30,0.17486),(42,0.20248),(54,0.21641),(66,0.21259),(78,0.20607),(90,0.19854),(102,0.17331),(114,0.16273),(126,0.15929),(138,0.17697),(150,0.22156),(162,0.24209),(174,0.22675),(186,0.22142),(198,0.20698),(210,0.18673),(222,0.15475),(234,0.13785),(246,0.10348),(258,0.11146),(270,0.11283),(282,0.1109),(294,0.09146),(306,0.08452),(318,0.08232),(330,0.11254),(342,0.17857),(354,0.1986),(366,0.2139),(378,0.24789),(390,0.26094),(402,0.24441),(414,0.22057),(426,0.19635),(438,0.17224),(450,0.15255),(462,0.14104),(474,0.15532),(486,0.14914),(498,0.13033),(510,0.12179),(522,0.11344)))
+	~	Dmnl
+	~	Tasa de paro (INE/Banco Mundial).
+	|
+
+Paro ref=
+	0.1417
+	~	Dmnl
+	~	Paro de 1981.
+	|
+
+Elasticidad empleo=
+	7.42563768
+	~	Dmnl
+	~	A PROBAR: la demanda cae con el paro.
+	|
+
+Factor empleo=
+	2.718281828^(-Elasticidad empleo*(Paro dato-Paro ref))
+	~	Dmnl
+	~	Efecto del paro sobre la demanda de los hogares.
+	|
+
+Elasticidad expectativa hogares=
+	10.63498913
+	~	Dmnl
+	~	A PROBAR: los hogares compran mas si esperan que el precio suba.
+	|
+
+Factor expectativa hogares=
+	2.718281828^(Elasticidad expectativa hogares*Expectativa usada)
+	~	Dmnl
+	~	Efecto de la expectativa sobre la demanda de los hogares.
+	|
+
+Plazo hipoteca dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,505)],(282,293.0),(294,309.0),(306,332.0),(318,336.0),(330,307.0),(342,296.0),(354,302.0),(366,285.0),(378,279.0),(390,267.0),(402,273.0),(414,271.0),(426,278.0),(438,282.0),(450,289.0),(462,279.0),(474,287.0),(486,294.0),(498,296.0),(510,290.0),(522,304.0)))
+	~	Month
+	~	Plazo medio de las hipotecas nuevas (2004-2024). Antes de 2004 se mantiene el de 2004 (supuesto).
+	|
+
+Plazo hipoteca=
+	Plazo hipoteca dato+IF THEN ELSE(Time>=Inicio politica, Politica plazo, 0)
+	~	Month
+	~	Plazo; la politica puede alargarlo.
+	|
+
+Politica plazo=
+	0.0
+	~	Month
+	~	Meses que se suman al plazo de las hipotecas desde el inicio de la politica.
+	|
+
+Prestamo valor dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,2)],(282,0.641),(294,0.642),(306,0.638),(318,0.628),(330,0.598),(342,0.563),(354,0.58),(366,0.583),(378,0.589),(390,0.574),(402,0.609),(414,0.632),(426,0.642),(438,0.656),(450,0.665),(462,0.63),(474,0.652),(486,0.654),(498,0.639),(510,0.614),(522,0.615)))
+	~	Dmnl
+	~	Prestamo sobre valor de las hipotecas nuevas (2004-2024). Antes se mantiene el de 2004 (supuesto).
+	|
+
+Prestamo valor=
+	MIN(0.95, Prestamo valor dato+IF THEN ELSE(Time>=Inicio politica, Politica prestamo valor, 0))
+	~	Dmnl
+	~	Prestamo sobre valor; la politica (por ejemplo un aval publico) puede subirlo.
+	|
+
+Politica prestamo valor=
+	0.0
+	~	Dmnl
+	~	Puntos (en tanto por uno) que se suman al prestamo/valor desde el inicio de la politica.
+	|
+
+Renta alquiler dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,11)],(6,3.040057),(18,2.742895),(30,2.917543),(42,2.820931),(54,2.852043),(66,3.020816),(78,3.955391),(90,4.716895),(102,5.445556),(114,5.902832),(126,6.368138),(138,5.934691),(150,5.651965),(162,5.435254),(174,5.371731),(186,5.284146),(198,5.52148),(210,5.818648),(222,6.084122),(234,5.894215),(246,5.655851),(258,5.75226),(270,5.790644),(282,5.852069),(294,5.72367),(306,5.488782),(318,5.357816),(330,5.003887),(342,5.103232),(354,5.198311),(366,4.797246),(378,4.519136),(390,4.627179),(402,5.00422),(414,5.086015),(426,5.108676),(438,5.161345),(450,5.121518),(462,5.094264),(474,5.101057),(486,5.074508),(498,4.795233),(510,4.665401),(522,4.82304)))
+	~	Euro/Metro2/Month
+	~	Alquiler bruto = rentabilidad por alquiler observada (Banco de España, desde 1996) x precio real. Antes de 1996, la de 1996 (supuesto).
+	|
+
+Cuota anual por euro=
+	MAX(0.005, Tipo nominal)/(1-(1+MAX(0.005, Tipo nominal))^(-Plazo hipoteca/12))
+	~	1/Year
+	~	Cuota anual por euro prestado (intereses + amortizacion).
+	|
+
+Capacidad por pago=
+	Esfuerzo maximo/(Cuota anual por euro*Prestamo valor)
+	~	Year
+	~	Anos de renta que un hogar puede pagar si dedica a la cuota su esfuerzo maximo.
+	|
+
+Capacidad por ahorro=
+	Ahorro anios/(1-Prestamo valor)
+	~	Year
+	~	Anos de renta que puede pagar con su entrada (ahorro en anos de renta / parte no financiada).
+	|
+
+Capacidad hipotecaria=
+	MIN(Capacidad por pago, Capacidad por ahorro)
+	~	Year
+	~	Anos de renta que puede pagar un hogar: manda la restriccion mas estricta.
+	|
+
+Acceso=
+	Capacidad hipotecaria/Precio sobre ingreso
+	~	Dmnl
+	~	Capacidad de compra / precio, ambos en anos de renta. 1 = el precio justo cabe.
+	|
+
+Acceso ref=
+	MIN(Esfuerzo maximo/(Cuota ref*Prestamo valor ref), Ahorro anios/(1-Prestamo valor ref))/Precio sobre ingreso ref
+	~	Dmnl
+	~	Acceso de 1981.
+	|
+
+Factor acceso=
+	(Acceso/Acceso ref)^Elasticidad acceso
+	~	Dmnl
+	~	La demanda de los hogares sube o baja con el acceso, relativo a 1981.
+	|
+
+Precio fundamental=
+	Capacidad hipotecaria*12*Ingreso/Superficie tipo
+	~	Euro/Metro2
+	~	Precio que cabe en la capacidad de compra de un hogar medio.
+	|
+
+Brecha financiera=
+	Precio efectivo/(Relacion precio capacidad*Precio fundamental)-1
+	~	Dmnl
+	~	Precio frente a lo que financia el sistema.
+	|
+
+Esfuerzo maximo=
+	0.76200876
+	~	Dmnl
+	~	A CALIBRAR: parte de la renta que un hogar dedica como maximo a la cuota.
+	|
+
+Ahorro anios=
+	3.60880656
+	~	Year
+	~	A CALIBRAR: ahorro disponible para la entrada, en anos de renta.
+	|
+
+Elasticidad acceso=
+	1.6607254
+	~	Dmnl
+	~	A CALIBRAR.
+	|
+
+Relacion precio capacidad=
+	0.74725075
+	~	Dmnl
+	~	A CALIBRAR: a que fraccion de la capacidad tiende el precio.
+	|
+
+Velocidad financiera=
+	0.03744226
+	~	1/Month
+	~	A CALIBRAR: rapidez con que el precio se acerca a lo que financia el sistema.
+	|
+
+Cuota ref=
+	0.18460789
+	~	1/Year
+	~	Cuota por euro de 1981.
+	|
+
+Prestamo valor ref=
+	0.641
+	~	Dmnl
+	~	Prestamo sobre valor de referencia (2004).
+	|
+
+Precio sobre ingreso ref=
+	4.29906377
+	~	Year
+	~	Precio sobre renta de 1981 en el modelo.
+	|
+
+Deuda hipotecaria=
+	INTEG(Nuevos prestamos-Amortizacion, 32614107854.0)
+	~	Euro
+	~	Deuda hipotecaria de los hogares (euros de 2010). Inicio: 30 % de la renta anual total (supuesto, solo importa la forma).
+	|
+
+Nuevos prestamos=
+	Fraccion hipotecada*(Compra hogares+Compra inversora)*Precio efectivo*Superficie tipo*Prestamo valor
+	~	Euro/Month
+	~	Compras financiadas x precio x superficie x prestamo/valor.
+	|
+
+Fraccion hipotecada=
+	0.27939498
+	~	Dmnl
+	~	A CALIBRAR: parte de las compras que se financian con hipoteca.
+	|
+
+Amortizacion=
+	Deuda hipotecaria/(Plazo hipoteca*Fraccion vida media)
+	~	Euro/Month
+	~	Devolucion: el stock entre la vida media restante de los prestamos.
+	|
+
+Fraccion vida media=
+	0.99994039
+	~	Dmnl
+	~	A CALIBRAR: vida media restante de los prestamos como fraccion del plazo.
+	|
+
+Deuda sobre renta=
+	Deuda hipotecaria/(Ingreso*Hogares*12)
+	~	Dmnl
+	~	Deuda / renta anual total de los hogares.
+	|
+
+Deuda indice=
+	Deuda sobre renta/0.3
+	~	Dmnl
+	~	Relativa al inicio. Se compara con el credito a hogares/PIB del BIS.
+	|
+
+Desviacion deuda=
+	Deuda indice/Credito indice-1
+	~	Dmnl
+	~	Frente al credito a hogares sobre PIB (BIS) relativo a 1981.
+	|
+
+Ingreso indice 2024=
+	1.9811985
+	~	Dmnl
+	~	Indice de renta de 2024.
+	|
+
+Renta alquiler efectiva=
+	Renta alquiler dato*IF THEN ELSE(Time>522, Ingreso indice/Ingreso indice 2024, 1)
+	~	Euro/Metro2/Month
+	~	Alquiler observado hasta 2024; despues crece con la renta.
+	|
+
+Indice materiales dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,4)],(6,1.0),(18,1.0),(30,1.0),(42,1.0),(54,1.0),(66,1.0),(78,1.0),(90,1.0),(102,1.0),(114,1.0),(126,1.0),(138,1.0),(150,1.0),(162,1.0),(174,1.0),(186,0.946911),(198,0.958333),(210,0.906047),(222,0.907273),(234,1.014938),(246,0.968617),(258,0.94321),(270,0.908946),(282,0.934884),(294,1.034509),(306,1.203623),(318,1.219168),(330,1.249831),(342,1.093071),(354,1.29553),(366,1.421461),(378,1.446688),(390,1.352831),(402,1.309227),(414,1.192982),(426,1.109856),(438,1.24569),(450,1.311743),(462,1.298256),(474,1.236429),(486,1.485079),(498,1.74406),(510,1.591762),(522,1.520041)))
+	~	Dmnl
+	~	Precio real de los materiales de construccion (INE, media simple de 8 materiales, 1995=100 -> relativo a 1981). Antes de 1995 se mantiene constante (supuesto).
+	|
+
+Indice mano obra dato=
+	WITH LOOKUP(Time, ([(0,0)-(528,3)],(6,1.0),(18,1.0),(30,1.0),(42,1.0),(54,1.0),(66,1.0),(78,1.0),(90,1.0),(102,1.0),(114,1.0),(126,1.0),(138,1.0),(150,1.0),(162,1.0),(174,1.0),(186,0.994208),(198,0.99053),(210,0.987907),(222,0.984545),(234,0.97891),(246,0.972858),(258,0.968724),(270,0.965655),(282,0.96124),(294,0.956489),(306,0.951449),(318,0.947146),(330,0.942451),(342,0.943614),(354,0.940627),(366,0.936005),(378,0.933123),(390,0.931549),(402,0.932045),(414,0.932957),(426,0.933459),(438,0.930419),(450,0.927966),(462,0.92724),(474,0.927624),(486,0.923347),(498,0.912527),(510,0.907716),(522,0.90411)))
+	~	Dmnl
+	~	Coste real de la mano de obra en construccion (INE, relativo a 1981). El INE lo construye con el 85 % de la variacion salarial general: es una convencion. Antes de 1995, constante (supuesto).
+	|
+
+Deriva coste real=
+	0.0
+	~	1/Year
+	~	Crecimiento anual real de los costes despues de 2024 (supuesto de escenario).
+	|
+
+Indice materiales=
+	IF THEN ELSE(Time>522, Indice materiales dato*(1+Deriva coste real)^((Time-522)/12), Indice materiales dato)
+	~	Dmnl
+	~	Indice de materiales usado: el dato hasta 2024 y despues, el dato por la deriva de escenario.
+	|
+
+Indice mano obra=
+	IF THEN ELSE(Time>522, Indice mano obra dato*(1+Deriva coste real)^((Time-522)/12), Indice mano obra dato)
+	~	Dmnl
+	~	Indice de mano de obra usado.
+	|
+
+Escalones normativos=
+	WITH LOOKUP(Time, ([(0,0)-(528,6)],(6,0.0),(18,0.0),(30,0.0),(42,0.0),(54,0.0),(66,0.0),(78,0.0),(90,0.0),(102,0.0),(114,0.0),(126,0.0),(138,0.0),(150,0.0),(162,0.0),(174,0.0),(186,0.0),(198,0.0),(210,0.0),(222,0.0),(234,0.0),(246,0.0),(258,0.0),(270,0.0),(282,0.0),(294,0.0),(306,0.0),(318,1.0),(330,1.0),(342,1.0),(354,1.0),(366,1.0),(378,1.0),(390,1.0),(402,2.0),(414,2.0),(426,2.0),(438,2.0),(450,2.0),(462,2.0),(474,3.0),(486,3.0),(498,3.0),(510,3.0),(522,3.0)))
+	~	Dmnl
+	~	Numero de cambios normativos acumulados (CTE 2006, DB-HE 2013, DB-HE 2019). Cada uno se aplica con una rampa de un ano.
+	|
+
+Escala normativa=
+	0.0
+	~	Dmnl
+	~	SUPUESTO: sobrecoste de cada escalon normativo, como fraccion del precio de 1981. No hay dato abierto que lo fije.
+	|
+
+Coste normativa=
+	Escala normativa*Escalones normativos*575.4052
+	~	Euro/Metro2
+	~	Sobrecoste acumulado por normativa (eficiencia energetica, accesibilidad, seguridad).
+	|
+
+Politica coste=
+	1.0
+	~	Dmnl
+	~	Multiplicador del coste de construccion desde el inicio de la politica (por ejemplo, 0,9 = reducir un 10 % cargas y sobrecostes).
+	|
+
+Coste construccion=
+	(Coste materiales+Coste mano obra+Coste energia transporte+Coste calidad+Coste otros+Coste normativa)*IF THEN ELSE(Time>=Inicio politica, Politica coste, 1)
+	~	Euro/Metro2
+	~	Coste de construir un m2 sin el suelo.
+	|
+
+Precio de coste=
+	(Coste construccion+Margen minimo)/(1-Fraccion suelo)
+	~	Euro/Metro2
+	~	Precio por debajo del cual no sale a cuenta construir: coste + margen minimo, con el suelo como fraccion del precio.
+	|
+
+Brecha coste=
+	Precio efectivo/Precio de coste-1
+	~	Dmnl
+	~	Precio frente a su precio de coste.
+	|
+
+Velocidad coste=
+	0.0
+	~	1/Month
+	~	A CALIBRAR: rapidez con que el precio sube hacia su precio de coste cuando cae por debajo.
+	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 840
+	~	Month
+	~	Fin de la simulacion: diciembre de 2050.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	Inicio de la simulacion.
+	|
+
+SAVEPER  =
+        TIME STEP
+	~	Month [0,?]
+	~	Frecuencia de almacenamiento.
+	|
+
+TIME STEP  = 0.25
+	~	Month [0,?]
+	~	Paso de integracion.
+	|

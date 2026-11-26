@@ -1,10 +1,10 @@
 import sys, os, json, glob, csv
-os.environ["VIV_MODEL"] = "vfin_model"
+os.environ["VIV_MODEL"] = "v6_model"
 sys.path.insert(0, ".")
-import vfin_model as M
+import v6_model as M
 D = M.D
 def rd(fn): return list(csv.DictReader(open(D + fn, encoding="utf-8")))
-P = json.load(open("params_final5.json"))
+P = json.load(open("params_final6.json"))
 fin = {int(r["anio"]): r for r in rd("financiacion_hipotecas_2003_2024.csv")}
 rent = {int(r["anio"]): r for r in rd("rentabilidad_vivienda_alternativas_1996_2024.csv")}
 term = {int(r["anio"]): float(r["total_terminadas"]) for r in rd("viviendas_iniciadas_terminadas_2003_2024.csv")}
@@ -28,7 +28,7 @@ for f in glob.glob("profvp_*.json"):
 SP = {"Sensibilidad margen": (0.05, 6.0), "Fraccion suelo": (0.1, 0.7), "tau obra": (6.0, 48.0), "Exponente inventario": (0.0, 6.0), "Elasticidad credito obra": (0.0, 1.5),
  "Esfuerzo maximo": (0.15, 0.9), "Ahorro anios": (0.2, 5.0), "Elasticidad acceso": (0.2, 8.0), "Relacion precio capacidad": (0.3, 2.0), "Velocidad financiera": (0.0, 0.2),
  "Fraccion hipotecada": (0.2, 1.0), "Fraccion vida media": (0.2, 1.0), "Velocidad precio": (0.005, 0.3), "Elasticidad hogares": (0.1, 2.0), "Techo desequilibrio": (0.3, 3.0),
- "tau expectativa": (3.0, 60.0), "Elasticidad expectativa hogares": (0.0, 15.0), "Elasticidad empleo": (0.0, 25.0), "Sensibilidad inversora": (0.0, 80.0)}
+ "tau expectativa": (3.0, 60.0), "Elasticidad expectativa hogares": (0.0, 15.0), "Elasticidad empleo": (0.0, 25.0), "Sensibilidad inversora": (0.0, 80.0), "Velocidad coste": (0.0, 0.2), "Escala normativa": (0.0, 0.08)}
 META = [
  ("Financiación", "Esfuerzo maximo", "Esfuerzo máximo", "fracción de la renta", "Parte de la renta que un hogar dedica como máximo a la cuota. Casi nunca limita desde los años 90: no está bien identificado."),
  ("Financiación", "Ahorro anios", "Ahorro para la entrada", "años de renta", "Ahorro que un hogar medio aporta como entrada."),
@@ -42,6 +42,8 @@ META = [
  ("Oferta", "tau obra", "Plazo de obra", "meses", "Tiempo medio hasta terminar una vivienda."),
  ("Oferta", "Exponente inventario", "Freno por vivienda sin vender", "—", "Cuánto se frena la obra si hay más vivienda en venta por hogar que en 1981."),
  ("Oferta", "Elasticidad credito obra", "Efecto del crédito sobre la obra", "—", "Ajustado a cero: los datos no lo necesitan."),
+ ("Costes", "Velocidad coste", "Empuje del precio hacia su precio de coste", "1/mes", "Apagado (0): el precio real está muy por encima de su coste, y con datos hasta 2007 desestabiliza la predicción."),
+ ("Costes", "Escala normativa", "Sobrecoste por escalón normativo", "fracción del precio de 1981", "Apagado (0). Supuesto: tres escalones (2006, 2013, 2019). Mejora el error solo un 0,5 % y no se identifica."),
  ("Precio y demanda", "Velocidad precio", "Respuesta del precio a la presión", "1/mes", "Cuánto sube el precio cuando la demanda supera la oferta. Es la clave de la tesis: ver el mapa de condiciones."),
  ("Precio y demanda", "Elasticidad hogares", "Elasticidad de la demanda al número de hogares", "—", "Escala de la demanda con los hogares."),
  ("Precio y demanda", "Techo desequilibrio", "Techo del desequilibrio", "—", "Límite a la velocidad de subida del precio."),
@@ -61,20 +63,20 @@ for grp, key, lab, unit, note in META:
 ptab.append(["Deterioro, demolición, edad", "fijos", "—", "Deterioro con vida de 2.400 meses y demolición de 1.500: no hay datos que los identifiquen, se dejan casi apagados.", False])
 dg = open("panel/diagramas.svgs", encoding="utf-8").read().split("\n<!--SEP-->\n")
 src = open("panel/web.src.html", encoding="utf-8").read()
-model = open("panel/model5.js", encoding="utf-8").read()
+model = open("panel/model6.js", encoding="utf-8").read()
 js = "const DATA=" + json.dumps(data) + ";\nconst PROFV=" + json.dumps(prof) + ";\nconst PTAB=" + json.dumps(ptab, ensure_ascii=False) + ";"
 art = src.replace("/*MODEL*/", model).replace("/*DATA*/", js)
-for i in range(4): art = art.replace("<!--DG%d-->" % (i + 1), dg[i])
-ORIG = "El modelo para Vensim (versión V5, con seis vistas), los datos en CSV con su fuente y los scripts de ajuste están disponibles junto a esta página."
-CLOUD = "El modelo para Vensim (versión V5, con seis vistas), los datos en CSV con su fuente y los scripts de ajuste forman parte del estudio, pero esta copia en línea no los incluye: se publicarán junto a la versión alojada de la página."
+for i in range(5): art = art.replace("<!--DG%d-->" % (i + 1), dg[i])
+ORIG = "El modelo para Vensim (versión V6, con siete vistas), los datos en CSV con su fuente y los scripts de ajuste están disponibles junto a esta página."
+CLOUD = "El modelo para Vensim (versión V6, con siete vistas), los datos en CSV con su fuente y los scripts de ajuste forman parte del estudio, pero esta copia en línea no los incluye: se publicarán junto a la versión alojada de la página."
 assert ORIG in art
 open("panel/web_artifact.html", "w", encoding="utf-8").write(art.replace(ORIG, CLOUD))
 import os as _os
-_files = ["archivos/Vivienda_V5_Financiacion_2050.mdl|Modelo de Vensim (V5, con 6 vistas)", "archivos/Vivienda_V5_Financiacion_2050_solo_ecuaciones.mdl|Modelo de Vensim, solo ecuaciones",
-          "archivos/params_ajustados_V5.json|Parámetros ajustados (JSON)", "archivos/FUENTES.md|Inventario de datos y fuentes", "archivos/Resultados_V5_financiacion.md|Resultados detallados del modelo V5"]
+_files = ["archivos/Vivienda_V6_Costes_2050.mdl|Modelo de Vensim (V6, con 7 vistas)", "archivos/Vivienda_V6_Costes_2050_solo_ecuaciones.mdl|Modelo de Vensim, solo ecuaciones",
+          "archivos/params_ajustados_V6.json|Parámetros ajustados (JSON)", "archivos/FUENTES.md|Inventario de datos y fuentes", "archivos/Resultados_V6_costes.md|Resultados detallados del modelo V6"]
 _csv = sorted(_os.listdir(D + "")) if False else sorted(f for f in _os.listdir(D) if f.endswith(".csv"))
 _files += ["archivos/datos/%s|Datos: %s" % (c, c) for c in _csv]
-_files += ["scripts/|Scripts de extracción, ajuste y generación de esta página"]
+_files += ["https://github.com/pedro-retortillo/vivienda-espana-modelo/tree/main/scripts|Scripts de extracción, ajuste y generación de esta página (en el repositorio)"]
 _links = '<ul class="tight">' + "".join('<li><a href="%s">%s</a></li>' % tuple(x.split("|")) for x in _files) + "</ul>"
 TAIL = "El modelo se ha construido con Vensim PLE, de uso personal y educativo.</p>"
 assert TAIL in art

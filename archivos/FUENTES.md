@@ -66,3 +66,11 @@ Se calibra en **euros constantes** (reales). El índice de precios del BIS tiene
 - Costes de construcción, rentas de alquiler y migración año a año desde 1980. La población y los hogares de la EPA cubren la demografía.
 - Demoliciones y salidas del parque.
 - Renta de los hogares en sentido estricto: el PIB per cápita es solo un proxy.
+
+## Costes de construcción (V6)
+- **Precios de materiales de construcción** (cemento, cerámica, madera, acero, energía, cobre, aluminio, ligantes), mensual desde 1995: INE, operación «Índices de Precios de Materiales y Energía e Índices Nacionales de la Mano de Obra», tabla 49298 (base 1964, península y Baleares). En el modelo: media simple de los 8, deflactada con el IPC (Banco Mundial) y relativa a 1981.
+- **Índice nacional de la mano de obra en construcción**, mensual desde 1995: INE, misma operación, tabla 8377. Según su metodología reproduce el 85 % de la variación del índice salarial general: es una convención, no el coste efectivo de las cuadrillas.
+- **Antes de 1995** no se usa dato: se mantiene el coste real constante (supuesto).
+- **Escalones normativos** (CTE 2006, DB-HE 2013, DB-HE 2019): fechas de entrada en vigor; el tamaño de cada escalón es un supuesto que el ajuste no identifica.
+- Precio medio del suelo urbano (Boletín del Observatorio de Vivienda y Suelo, tabla 3.3, desde 2004): disponible, no se usa en el ajuste; el suelo entra como fracción del precio.
+- Archivos: `datos/INE_costes_construccion_1995_2025.csv` y `datos/indice_coste_construccion_1981_2024.csv`.
